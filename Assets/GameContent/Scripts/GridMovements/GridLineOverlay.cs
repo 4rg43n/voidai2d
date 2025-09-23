@@ -1,3 +1,4 @@
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -9,6 +10,13 @@ using UnityEngine.Rendering;
 [DisallowMultipleComponent]
 public class GridLineOverlay : MonoBehaviour
 {
+    [Header("Path Overlay")]
+    public bool drawSquares = true;
+    public List<TileCell> pathTiles = new();           // assign your A* path here
+    public Color pathColor = new Color(1f, 0f, 0f, 0.35f);
+    public float squaresZOffset = 0.001f;              // draws slightly above the grid
+
+
 
     [Header("Grid (in cells)")]
     [Min(1)] public int columns = 10;
@@ -125,6 +133,15 @@ public class GridLineOverlay : MonoBehaviour
         if (drawGrid)
             DrawGridLines();
 
+
+        if (drawSquares && pathTiles != null && pathTiles.Count > 0)
+        {
+            DrawSquares(pathTiles, cellWidth, cellHeight,
+                new Color(pathColor.r, pathColor.g, pathColor.b,
+                          Mathf.Clamp01(pathColor.a)));
+        }
+
+
         //DrawThickLine(
         //    CellToLocal(startCell, useCellCenters),
         //    CellToLocal(endCell, useCellCenters),
@@ -133,6 +150,45 @@ public class GridLineOverlay : MonoBehaviour
         //);
 
         GL.PopMatrix();
+    }
+
+    /// <summary>
+    /// Fills a quad per cell. Each TileCell.WorldPosition is treated as the
+    /// BOTTOM-LEFT corner in WORLD space. Width/Height are WORLD-units.
+    /// Converts to this overlay's LOCAL space so existing GL matrices work.
+    /// </summary>
+    public void DrawSquares(IList<TileCell> cells, float width, float height, Color c)
+    {
+        if (cells == null || cells.Count == 0) return;
+
+        // We’re already in the correct GL matrix scope (camera proj + modelview = cam * localToWorld)
+        // So we must submit LOCAL-space vertices. Convert each world corner → local.
+        GL.Begin(GL.TRIANGLES);
+        GL.Color(c);
+
+        for (int i = 0; i < cells.Count; i++)
+        {
+            var cell = cells[i];
+            if (cell == null) continue;
+
+            // Corners in WORLD space (bottom-left is provided by the TileCell)
+            Vector3 blW = cell.WorldPosition;
+            Vector3 brW = blW + new Vector3(width, 0f, 0f);
+            Vector3 tlW = blW + new Vector3(0f, height, 0f);
+            Vector3 trW = blW + new Vector3(width, height, 0f);
+
+            // Convert to LOCAL space for this overlay
+            Vector3 bl = transform.InverseTransformPoint(blW); bl.z = zOffset + squaresZOffset;
+            Vector3 br = transform.InverseTransformPoint(brW); br.z = zOffset + squaresZOffset;
+            Vector3 tl = transform.InverseTransformPoint(tlW); tl.z = zOffset + squaresZOffset;
+            Vector3 tr = transform.InverseTransformPoint(trW); tr.z = zOffset + squaresZOffset;
+
+            // Two triangles (bl, tl, tr) and (bl, tr, br)
+            GL.Vertex(bl); GL.Vertex(tl); GL.Vertex(tr);
+            GL.Vertex(bl); GL.Vertex(tr); GL.Vertex(br);
+        }
+
+        GL.End();
     }
 
     private void DrawGridLines()

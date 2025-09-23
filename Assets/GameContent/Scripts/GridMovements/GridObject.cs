@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using VoidAI.Pathfinding;
 
 public class GridObject : MonoBehaviour
 {
@@ -28,5 +30,6 @@ public class GridObject : MonoBehaviour
     { }
     public virtual void OnLocationExited(TileCell oldLoc) // the Location will be null here
     { }
+
 }
 

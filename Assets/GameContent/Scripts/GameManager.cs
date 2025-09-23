@@ -29,9 +29,20 @@ public class GameManager : MonoBehaviour
 
         if (Input.GetMouseButtonDown(1))
         {
+
+            if (mapManager.Selected!=null)
+            {
+                TileCell src = mapManager.Selected;
+                TileCell dst = mapManager.OnMouseClick(Input.mousePosition, false);
+                List<TileCell> path = mapManager.GetShortestPath(src, dst);
+                mapManager.SelectPath(path);
+            }
+
             mapManager.Deselect();
         }
     }
+
+
 
     public void SetLocation(GridObject gridObj, Vector2Int tilePos)
     {

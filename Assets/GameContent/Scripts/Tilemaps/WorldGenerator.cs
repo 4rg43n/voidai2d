@@ -31,6 +31,24 @@ public class WorldGenerator : MonoBehaviour
     public List<TileCell> TileCells = new();
     int[,] worldArea = null;
 
+    public TileCell GetCellAtPosition(Vector2Int pos)
+    {
+        if (!IsPositionInMap(pos))
+            return null;
+
+        int index = pos.x + pos.y * width;
+        return TileCells[index];
+    }
+
+    public bool IsPositionInMap(Vector2Int pos)
+    {
+        if (pos.x < 0 || pos.x >= width ||
+            pos.y < 0 || pos.x >= height)
+            return false;
+
+        return true;
+    }
+
     public void Generate()
     {
         Clear();
@@ -55,6 +73,7 @@ public class WorldGenerator : MonoBehaviour
                     tilemap.SetTile(new Vector3Int(x, y, 0), tiles[tileIndex]);
                     TileCell cell = new TileCell
                     {
+                        world = this,
                         Position = new Vector2Int(x, y),
                         WorldPosition = new Vector3(x * cellDims.x + transform.position.x, y * cellDims.y + transform.position.y),
                         areaValue = tileIndex

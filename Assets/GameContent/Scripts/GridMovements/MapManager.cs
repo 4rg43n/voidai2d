@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using UnityEngine;
+using VoidAI.Pathfinding;
 
 public class MapManager : MonoBehaviour
 {
@@ -13,46 +15,109 @@ public class MapManager : MonoBehaviour
     public int Height { get { return worldGenerator.height; } }
     public List<TileCell> TileCells { get { return worldGenerator.TileCells; } }
     public TileCell Selected { get { return selected; } }
+    public List<TileCell> SelectedPath { get { return selectedPath; } }
+    public WorldGenerator WorldGenerator { get { return worldGenerator; } }
 
     TileCell selected;
+    List<TileCell> selectedPath = new();
     SpriteRenderer selMark;
 
     private void Start()
     {
-        gridLineOverlay.enabled = false;
+        gridLineOverlay.drawGrid = gridLineOverlay.drawSquares = false;
+    }
+
+    public List<TileCell> GetCellsInRange(TileCell src, int[,] pattern)
+    {
+        List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindPattern(src, pattern, true);
+        List<TileCell> path = new List<TileCell>();
+
+        foreach (var n in pathNodes)
+        {
+            path.Add(GetCellAtPosition(new Vector2Int(n.X, n.Y)));
+        }
+
+        return path;
+    }
+
+    public List<TileCell> GetCellsInRange(TileCell src, int range)
+    {
+        List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindRange(src, range, true);
+        List<TileCell> path = new List<TileCell>();
+
+        foreach (var n in pathNodes)
+        {
+            path.Add(GetCellAtPosition(new Vector2Int(n.X, n.Y)));
+        }
+
+        return path;
+    }
+
+    public List<TileCell> GetShortestPath(TileCell src, TileCell dst)
+    {
+        List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindShortestPath(src, dst, true);
+        List<TileCell> path = new List<TileCell>();
+
+        foreach (var n in pathNodes)
+        {
+            path.Add(GetCellAtPosition(new Vector2Int(n.X, n.Y)));
+        }
+
+        return path;
     }
 
     public TileCell GetCellAtPosition(Vector2Int pos)
     {
-        if (!IsPositionInMap(pos))
-            return null;
-
-        int index = pos.x + pos.y * Width;
-        return TileCells[index];
+        return worldGenerator.GetCellAtPosition(pos);
     }
 
-    public bool IsPositionInMap(Vector2Int pos)
+    public TileCell IsPositionInMap(Vector2Int pos)
     {
-        if (pos.x < 0 || pos.x >= Width ||
-            pos.y < 0 || pos.x >= Height)
-            return false;
-
-        return true;
+        return worldGenerator.IsPositionInMap(pos) ? worldGenerator.GetCellAtPosition(pos) : null;
     }
 
-    public TileCell OnMouseClick(Vector3 mousePosition)
+    public TileCell OnMouseClick(Vector3 mousePosition, bool selectTile=true)
     {
         Vector3 localPos = GetLocalMousePosition(mousePosition);
         Vector2Int tilePos = new Vector2Int(Mathf.FloorToInt(localPos.x), Mathf.FloorToInt(localPos.y));
 
-        TileCell cell = GetCellAtPosition(tilePos);
-        Select(cell);
+        TileCell cell = worldGenerator.GetCellAtPosition(tilePos);
+
+        if (selectTile)
+            Select(cell);
 
         // You can use localPos as needed, e.g., log or pass to another method
         Debug.Log($"Local Position: {tilePos} => {cell.areaValue}");
 
 
-        return Selected;
+        return cell;
+    }
+
+    public void DeselectPath()
+    {
+        if (selectedPath.Count==0)
+        {
+            return;
+        }
+
+        foreach (TileCell cell in selectedPath)
+            cell.OnDeselectPath();
+
+        selectedPath.Clear();
+        gridLineOverlay.drawSquares = false;
+        gridLineOverlay.pathTiles.Clear();
+    }
+
+    public void SelectPath(List<TileCell> paths)
+    {
+        if (paths == null || paths.Count == 0)
+            return;
+
+        DeselectPath();
+
+        selectedPath.AddRange(paths);
+        gridLineOverlay.drawSquares = true;
+        gridLineOverlay.pathTiles.AddRange(paths);
     }
 
     public void Deselect()
@@ -65,7 +130,7 @@ public class MapManager : MonoBehaviour
         selected.OnDeselect();
         selected = null;
 
-        gridLineOverlay.enabled = false;
+        gridLineOverlay.drawGrid = false;
     }
 
     public void Select(TileCell cell)
@@ -78,7 +143,7 @@ public class MapManager : MonoBehaviour
         if (cell == null)
             return;
 
-        gridLineOverlay.enabled = true;
+        gridLineOverlay.drawGrid = true;
 
         selMark = Instantiate(selPrefab);
         selMark.transform.parent = transform;
