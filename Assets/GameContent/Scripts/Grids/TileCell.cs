@@ -42,11 +42,6 @@ public class TileCell:IAStarNode
         {
             contents = null;
         }
-        else
-        {
-            Debug.LogError("Tried to clear contents of location, but location is empty. Ignoring.");
-            return;
-        }
     }
 
     public void SetContents(GridObject gridObj)

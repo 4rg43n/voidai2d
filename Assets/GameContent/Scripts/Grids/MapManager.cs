@@ -14,7 +14,7 @@ public class MapManager : MonoBehaviour
     public int Width { get { return worldGenerator.width; } }
     public int Height { get { return worldGenerator.height; } }
     public List<TileCell> TileCells { get { return worldGenerator.TileCells; } }
-    public TileCell Selected { get { return selected; } }
+    public TileCell SelectedCell { get { return selected; } }
     public List<TileCell> SelectedPath { get { return selectedPath; } }
     public WorldGenerator WorldGenerator { get { return worldGenerator; } }
 
@@ -66,6 +66,33 @@ public class MapManager : MonoBehaviour
         return path;
     }
 
+    public bool IsClickedSelectedCell(TileCell cell)
+    {
+        if (cell == null || SelectedCell == null)
+            return false;
+
+        return cell == SelectedCell;
+    }
+
+    public bool IsClickedSelectedPath(TileCell cell, bool justCheckEnd=false)
+    {
+        if (cell == null || selectedPath == null || selectedPath.Count == 0)
+            return false;
+
+        if (justCheckEnd)
+        {
+            return cell == selectedPath[selectedPath.Count - 1];
+        }
+
+        foreach(TileCell pathCell in selectedPath)
+        {
+            if (pathCell == cell)
+                return true;
+        }
+
+        return false;
+    }
+
     public TileCell GetCellAtPosition(Vector2Int pos)
     {
         return worldGenerator.GetCellAtPosition(pos);
@@ -76,21 +103,23 @@ public class MapManager : MonoBehaviour
         return worldGenerator.IsPositionInMap(pos) ? worldGenerator.GetCellAtPosition(pos) : null;
     }
 
-    public TileCell OnMouseClick(Vector3 mousePosition, bool selectTile=true)
+    public TileCell OnMouseClick(Vector3 mousePosition)
     {
         Vector3 localPos = GetLocalMousePosition(mousePosition);
         Vector2Int tilePos = new Vector2Int(Mathf.FloorToInt(localPos.x), Mathf.FloorToInt(localPos.y));
 
         TileCell cell = worldGenerator.GetCellAtPosition(tilePos);
 
-        if (selectTile)
-            Select(cell);
-
         // You can use localPos as needed, e.g., log or pass to another method
         Debug.Log($"Local Position: {tilePos} => {cell.areaValue}");
 
-
         return cell;
+    }
+
+    public void DeselectAll()
+    {
+        DeselectPath();
+        DeselectCell();
     }
 
     public void DeselectPath()
@@ -120,7 +149,7 @@ public class MapManager : MonoBehaviour
         gridLineOverlay.pathTiles.AddRange(paths);
     }
 
-    public void Deselect()
+    public void DeselectCell()
     {
         if (selected == null)
             return;
@@ -133,12 +162,12 @@ public class MapManager : MonoBehaviour
         gridLineOverlay.drawGrid = false;
     }
 
-    public void Select(TileCell cell)
+    public void SelectCell(TileCell cell)
     {
         if (selected == cell)
             return;
 
-        Deselect();
+        DeselectCell();
 
         if (cell == null)
             return;

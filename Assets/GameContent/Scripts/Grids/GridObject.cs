@@ -11,16 +11,14 @@ public class GridObject : MonoBehaviour
 
     public void SetLocation(TileCell cell)
     {
-        if (cell == null)
+        if (Location != null)
         {
-            if (Location != null)
-            {
-                Location.ClearContents();
-                Location = null;
-            }
+            Location.ClearContents();
+            Location = null;
         }
-        else
-        {
+
+        if (cell != null)
+        { 
             cell.SetContents(this);
             Location = cell;
         }
