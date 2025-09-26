@@ -14,6 +14,7 @@ public class GridLineOverlay : MonoBehaviour
     public bool drawSquares = true;
     public List<TileCell> pathTiles = new();           // assign your A* path here
     public Color pathColor = new Color(1f, 0f, 0f, 0.35f);
+    public Color pathColorDefault = new Color(1f, 0f, 0f, 0.35f);
     public float squaresZOffset = 0.001f;              // draws slightly above the grid
 
 

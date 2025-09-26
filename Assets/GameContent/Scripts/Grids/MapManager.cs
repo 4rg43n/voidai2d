@@ -20,6 +20,7 @@ public class MapManager : MonoBehaviour
 
     TileCell selected;
     List<TileCell> selectedPath = new();
+    List<TileCell> selectedArea = new();
     SpriteRenderer selMark;
 
     private void Start()
@@ -41,6 +42,19 @@ public class MapManager : MonoBehaviour
     }
 
     public List<TileCell> GetCellsInRange(TileCell src, int range)
+    {
+        List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindRange(src, range, true);
+        List<TileCell> path = new List<TileCell>();
+
+        foreach (var n in pathNodes)
+        {
+            path.Add(GetCellAtPosition(new Vector2Int(n.X, n.Y)));
+        }
+
+        return path;
+    }
+
+    public List<TileCell> GetRange(TileCell src, int range)
     {
         List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindRange(src, range, true);
         List<TileCell> path = new List<TileCell>();
@@ -93,6 +107,20 @@ public class MapManager : MonoBehaviour
         return false;
     }
 
+    public bool IsClickedSelectedArea(TileCell cell)
+    {
+        if (cell == null || selectedArea == null || selectedArea.Count == 0)
+            return false;
+
+        foreach (TileCell pathCell in selectedArea)
+        {
+            if (pathCell == cell)
+                return true;
+        }
+
+        return false;
+    }
+
     public TileCell GetCellAtPosition(Vector2Int pos)
     {
         return worldGenerator.GetCellAtPosition(pos);
@@ -120,6 +148,36 @@ public class MapManager : MonoBehaviour
     {
         DeselectPath();
         DeselectCell();
+        DeselectArea();
+    }
+
+    public void DeselectArea()
+    {
+        if (selectedArea.Count == 0)
+        {
+            return;
+        }
+
+        foreach (TileCell cell in selectedArea)
+            cell.OnDeselectPath();
+
+        selectedArea.Clear();
+        gridLineOverlay.drawSquares = false;
+        gridLineOverlay.pathTiles.Clear();
+        gridLineOverlay.pathColor = gridLineOverlay.pathColorDefault;
+    }
+
+    public void SelectArea(List<TileCell> paths, Color color)
+    {
+        if (paths == null || paths.Count == 0)
+            return;
+
+        DeselectArea();
+
+        selectedArea.AddRange(paths);
+        gridLineOverlay.drawSquares = true;
+        gridLineOverlay.pathTiles.AddRange(paths);
+        gridLineOverlay.pathColor = color;
     }
 
     public void DeselectPath()
@@ -135,6 +193,7 @@ public class MapManager : MonoBehaviour
         selectedPath.Clear();
         gridLineOverlay.drawSquares = false;
         gridLineOverlay.pathTiles.Clear();
+        gridLineOverlay.pathColor = gridLineOverlay.pathColorDefault;
     }
 
     public void SelectPath(List<TileCell> paths)

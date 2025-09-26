@@ -1,4 +1,5 @@
 using RX.AI.Orders;
+using RX.Utils;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,6 +11,15 @@ public class GameManager : MonoBehaviour
 
     public GridObject testGridObjPrefab;
     public Vector2Int testGridPosition = new Vector2Int(0, 0);
+
+    public Color pathColor = new Color(1f, 0f, 0f, 0.35f);
+    public Color pathColorAttack = new Color(1f, 0f, 0f, 0.35f);
+    public Color pathColorMagic = new Color(0f, 0f, 1f, 0.35f);
+    public Color pathColorSkill = new Color(0f, 1f, 0f, 0.35f);
+    public Color pathColorItem = new Color(1f, 1f, 0f, 0.35f);
+
+    public GameState GameState { get; set; } = GameState.INITIALIZE;
+    public GameSubState GameSubState { get; set; } = GameSubState.MOVE;
 
     GridObject testGridObj;
     public OrderHandler Orders = new OrderHandler();
@@ -30,6 +40,8 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        bool isOverUI = GameUtils.IsOverUI();
+
         if (Orders.NumOfOrders > 0)
         {
             Orders.UpdateOrders(this);
@@ -37,22 +49,24 @@ public class GameManager : MonoBehaviour
         }
 
         // Listen for left mouse button click using the old input system
-        if (Input.GetMouseButtonDown(0))
+        if (!isOverUI&&Input.GetMouseButtonDown(0))
         {
             TileCell cell = MapManager.OnMouseClick(Input.mousePosition);
 
             if (MapManager.IsClickedSelectedCell(cell))
             {
                 MapManager.DeselectPath();
+                SelectArea();
             }
             else
             {
                 MapManager.SelectCell(cell);
                 MapManager.DeselectPath();
+                MapManager.DeselectArea();
             }
         }
 
-        if (Input.GetMouseButtonDown(1))
+        if (!isOverUI && Input.GetMouseButtonDown(1))
         {
             if (MapManager.SelectedCell == null ||
                 Input.GetKey(KeyCode.LeftControl))
@@ -77,9 +91,44 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void SelectArea()
+    {
+        if (GameSubState != GameSubState.MOVE && MapManager.SelectedCell != null)
+        {
+            List<TileCell> area = MapManager.GetRange(MapManager.SelectedCell, 3);
+            MapManager.SelectArea(area, GetAreaColor());
+        }
+        else
+        {
+            MapManager.DeselectArea();
+        }
+    }
+
+    Color GetAreaColor()
+    {
+        return GameSubState switch
+        {
+            GameSubState.MOVE => pathColor,
+            GameSubState.ATTACK => pathColorAttack,
+            GameSubState.MAGIC => pathColorMagic,
+            GameSubState.SKILL => pathColorSkill,
+            GameSubState.ITEM => pathColorItem,
+            _ => pathColor,
+        };
+    }
+
+    public GameSubState SetGameSubState(GameSubState subState)
+    {
+        GameSubState = subState;
+
+        MapManager.DeselectAll();
+
+        return GameSubState;
+    }
+
     public void MoveObject(TileCell src, TileCell dst, List<TileCell> path)
     {
-        Orders.Add(new GridOrderUtils.GridMoveOrder(src.Contents, path, 0.5f));
+        Orders.Add(new GridOrderUtils.GridMoveOrder(src.Contents, path, 0.25f));
         //Debug.Log("Move");
     }
 
@@ -89,4 +138,20 @@ public class GameManager : MonoBehaviour
         TileCell cell = MapManager.GetCellAtPosition(tilePos);
         gridObj.SetLocation(cell);
     }
+}
+
+public enum GameState
+{
+    INITIALIZE,
+    PLAYER_TURN,
+    ENEMY_TURN,
+}
+
+public enum GameSubState
+{
+    MOVE,
+    ATTACK,
+    MAGIC,
+    SKILL,
+    ITEM,
 }
