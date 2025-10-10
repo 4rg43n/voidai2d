@@ -1,4 +1,5 @@
 using RX.AI.Orders;
+using RX.UI;
 using RX.Utils;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,8 +10,10 @@ public class GameManager : MonoBehaviour
 
     public MapManager MapManager;
 
-    public GridObject testGridObjPrefab;
-    public Vector2Int testGridPosition = new Vector2Int(0, 0);
+    public FloatingTextUI floatingTextPrefab;
+
+    public GridObject[] testGridObjPrefab;
+    public Vector2Int[] testGridPosition;
 
     public Color pathColor = new Color(1f, 0f, 0f, 0.35f);
     public Color pathColorAttack = new Color(1f, 0f, 0f, 0.35f);
@@ -33,8 +36,12 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         MapManager.worldGenerator.Generate();
-        testGridObj = Instantiate(testGridObjPrefab);
-        SetLocation(testGridObj, testGridPosition);
+
+        for(int i=0;i<testGridObjPrefab.Length;i++)
+        {
+            testGridObj = Instantiate(testGridObjPrefab[i]);
+            SetLocation(testGridObj, testGridPosition[i]);
+        }
     }
 
     // Update is called once per frame
@@ -49,7 +56,7 @@ public class GameManager : MonoBehaviour
         }
 
         // Listen for left mouse button click using the old input system
-        if (!isOverUI&&Input.GetMouseButtonDown(0))
+        if (!isOverUI && Input.GetMouseButtonDown(0))
         {
             TileCell cell = MapManager.OnMouseClick(Input.mousePosition);
 
@@ -77,25 +84,78 @@ public class GameManager : MonoBehaviour
 
             TileCell cell = MapManager.OnMouseClick(Input.mousePosition);
 
-            bool isMove = MapManager.IsClickedSelectedPath(cell, true) && MapManager.SelectedCell.Contents != null;
-
-            TileCell src = MapManager.SelectedCell;
-            TileCell dst = cell;
-            List<TileCell> path = MapManager.GetShortestPath(src, dst);
-            MapManager.SelectPath(path);
-
-            if (isMove)
+            if (GameSubState == GameSubState.MOVE)
             {
-                MoveObject(src, dst, path);
+                bool isMove = GameSubState == GameSubState.MOVE && MapManager.IsClickedSelectedPath(cell, true) && MapManager.SelectedCell.Contents != null;
+
+                TileCell src = MapManager.SelectedCell;
+                TileCell dst = cell;
+                List<TileCell> path = MapManager.GetShortestPath(src, dst);
+                MapManager.SelectPath(path);
+
+                if (isMove)
+                {
+                    MoveObject(src, dst, path);
+                }
+            }
+            else if (GameSubState == GameSubState.ATTACK)
+            {
+                if (MapManager.IsClickedSelectedArea(cell) && MapManager.SelectedCell.Contents != null && cell.Contents != null)
+                {
+                    UseAbilityObject(MapManager.SelectedCell, cell);
+                }
+                else
+                {
+                    MapManager.DeselectArea();
+                }
+            }
+            else if (GameSubState == GameSubState.MAGIC)
+            {
+                if (MapManager.IsClickedSelectedArea(cell) && MapManager.SelectedCell.Contents != null && cell.Contents != null)
+                {
+                    UseAbilityObject(MapManager.SelectedCell, cell);
+                }
+                else
+                {
+                    MapManager.DeselectArea();
+                }
+            }
+            else if (GameSubState == GameSubState.SKILL)
+            {
+                if (MapManager.IsClickedSelectedArea(cell) && MapManager.SelectedCell.Contents != null && cell.Contents != null)
+                {
+                    UseAbilityObject(MapManager.SelectedCell, cell);
+                }
+                else
+                {
+                    MapManager.DeselectArea();
+                }
+            }
+            else if (GameSubState == GameSubState.ITEM)
+            {
+                if (MapManager.IsClickedSelectedArea(cell) && MapManager.SelectedCell.Contents != null && cell.Contents != null)
+                {
+                    UseAbilityObject(MapManager.SelectedCell, cell);
+                }
+                else
+                {
+                    MapManager.DeselectArea();
+                }
             }
         }
+    }
+
+    public void ShowFloatingText(string text, Vector3 position, Color color)
+    {
+        FloatingTextUI floatingText = Instantiate(floatingTextPrefab, position, Quaternion.identity);
+        floatingText.SetText(color, text);
     }
 
     void SelectArea()
     {
         if (GameSubState != GameSubState.MOVE && MapManager.SelectedCell != null)
         {
-            List<TileCell> area = MapManager.GetRange(MapManager.SelectedCell, 3);
+            List<TileCell> area = MapManager.GetRange(MapManager.SelectedCell, 3, false);
             MapManager.SelectArea(area, GetAreaColor());
         }
         else
@@ -117,6 +177,18 @@ public class GameManager : MonoBehaviour
         };
     }
 
+    GameAbility GetAbilityByGameSubState()
+    {
+        return GameSubState switch
+        {
+            GameSubState.ATTACK => MapManager.SelectedCell.Contents.attackAbility,
+            GameSubState.MAGIC => MapManager.SelectedCell.Contents.magicAbility,
+            GameSubState.SKILL => MapManager.SelectedCell.Contents.skillAbility,
+            GameSubState.ITEM => MapManager.SelectedCell.Contents.itemAbility,
+            _ => null,
+        };
+    }
+
     public GameSubState SetGameSubState(GameSubState subState)
     {
         GameSubState = subState;
@@ -126,10 +198,25 @@ public class GameManager : MonoBehaviour
         return GameSubState;
     }
 
+    public void UseAbilityObject(TileCell src, TileCell dst)
+    {
+        GameAbility ability = GetAbilityByGameSubState();
+        if (ability != null)
+        {
+            UseAbilityObject(src, dst, ability);
+        }
+    }
+
+    public void UseAbilityObject(TileCell src, TileCell dst, GameAbility ability)
+    {
+        GameAbility abilityInst = Instantiate(ability);
+        abilityInst.transform.parent = src.Contents.transform;
+        Orders.Add(new GridOrderUtils.UseGameAbilityOrder(src.Contents, dst, abilityInst));
+    }
+
     public void MoveObject(TileCell src, TileCell dst, List<TileCell> path)
     {
         Orders.Add(new GridOrderUtils.GridMoveOrder(src.Contents, path, 0.25f));
-        //Debug.Log("Move");
     }
 
     public void SetLocation(GridObject gridObj, Vector2Int tilePos)

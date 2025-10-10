@@ -5,7 +5,46 @@ using static RX.AI.Orders.OrderUtils;
 
 public static class GridOrderUtils
 {
-    public class GridMoveOrder:GridBasicOrder
+    public class UseGameAbilityOrder : GridBasicOrder
+    {
+        TileCell target;
+        bool complete = false;
+        GameAbility ability;
+
+        public UseGameAbilityOrder(GridObject actor, TileCell target, GameAbility ability) : base(actor, "GridMoveOrder", new object[] { target, ability })
+        {
+        }
+
+        public override void DoStart(object executer, OrderArgs args)
+        {
+            target = (TileCell)args.args[0];
+            ability = (GameAbility)args.args[1];
+            ability.OnAbilityCompleteEvent += Ability_OnAbilityCompleteEvent;
+            ability.UseAbility(actor, target);
+        }
+
+        public override bool DoUpdate(object executer, OrderArgs args)
+        {
+            return complete;
+        }
+
+        void Ability_OnAbilityCompleteEvent()
+        {
+            complete = true;
+            ability.OnAbilityCompleteEvent -= Ability_OnAbilityCompleteEvent;
+        }
+
+        public override void DoComplete(object executer, OrderArgs args)
+        {
+            GameManager.Singleton.MapManager.DeselectPath();
+            GameManager.Singleton.MapManager.SelectCell(actor.Location);
+            GameManager.Singleton.MapManager.DeselectPath();
+            GameManager.Singleton.MapManager.DeselectArea();
+        }
+    }
+
+
+    public class GridMoveOrder : GridBasicOrder
     {
         List<TileCell> path = null;
         float time = 0;
@@ -13,7 +52,7 @@ public static class GridOrderUtils
         float currentTime = 0;
         Vector3 startPosition;
 
-        public GridMoveOrder(GridObject actor, List<TileCell> path, float time):base(actor, "GridMoveOrder", new object[] {path,time})
+        public GridMoveOrder(GridObject actor, List<TileCell> path, float time) : base(actor, "GridMoveOrder", new object[] { path, time })
         {
         }
 
@@ -64,7 +103,7 @@ public static class GridOrderUtils
     {
         protected GridObject actor;
 
-        public GridBasicOrder(GridObject actor, string name, object[] args):base(name, args)
+        public GridBasicOrder(GridObject actor, string name, object[] args) : base(name, args)
         {
             this.actor = actor;
         }

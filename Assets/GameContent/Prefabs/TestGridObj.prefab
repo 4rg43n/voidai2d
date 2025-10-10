@@ -102,6 +102,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   OriginOffset: {x: 0.5, y: 0.5}
   Location:
+    world: {fileID: 0}
     Position: {x: 0, y: 0}
     WorldPosition: {x: 0, y: 0, z: 0}
     areaValue: -1
+  attackAbility: {fileID: 1072858504356924196, guid: e037acd4af6072a49a75d78c83555cd5, type: 3}

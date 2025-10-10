@@ -54,9 +54,9 @@ public class MapManager : MonoBehaviour
         return path;
     }
 
-    public List<TileCell> GetRange(TileCell src, int range)
+    public List<TileCell> GetRange(TileCell src, int range, bool testWalkable)
     {
-        List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindRange(src, range, true);
+        List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindRange(src, range, testWalkable);
         List<TileCell> path = new List<TileCell>();
 
         foreach (var n in pathNodes)

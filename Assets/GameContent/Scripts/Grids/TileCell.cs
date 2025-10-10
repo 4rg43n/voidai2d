@@ -20,7 +20,7 @@ public class TileCell:IAStarNode
 
     public int Y => Position.y;
 
-    public bool IsWalkable => areaValue>0;
+    public bool IsWalkable => areaValue > 0 && contents == null;
 
     public float Distance => 1;
 
@@ -48,7 +48,7 @@ public class TileCell:IAStarNode
     {
         if (Contents!=null)
         {
-            Debug.LogError("Tried to enter location, but location is not empty. Ignoring.");
+            Debug.LogError("Tried to enter location, but location is not empty. Ignoring. Position:"+Position);
             return;
         }
 

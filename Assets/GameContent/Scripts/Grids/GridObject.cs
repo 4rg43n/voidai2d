@@ -9,6 +9,11 @@ public class GridObject : MonoBehaviour
     [HideInInspector]
     public TileCell Location=null;
 
+    public GameAbility attackAbility; // if set, this ability will be used for basic attacks
+    public GameAbility magicAbility; // if set, this ability will be used for magic attacks
+    public GameAbility skillAbility; // if set, this ability will be used for skill attacks
+    public GameAbility itemAbility; // if set, this ability will be used for item use
+
     public void SetLocation(TileCell cell)
     {
         if (Location != null)
