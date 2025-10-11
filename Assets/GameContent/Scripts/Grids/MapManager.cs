@@ -28,7 +28,25 @@ public class MapManager : MonoBehaviour
         gridLineOverlay.drawGrid = gridLineOverlay.drawSquares = false;
     }
 
-    public List<TileCell> GetCellsInRange(TileCell src, int[,] pattern)
+    public Dictionary<TileCell, List<TileCell>> GetCellsInReachableArea(TileCell src, int range, bool testWalkable)
+    {
+        Dictionary<TileCell, List<TileCell>> areaPathMap = new Dictionary<TileCell, List<TileCell>>();
+        List<TileCell> possibleArea = GetCellsInRange(src, range, testWalkable);
+
+        foreach (TileCell dst in possibleArea)
+        {
+            List<TileCell> path = GetShortestPath(src, dst);
+            if (path.Count > 0 && path[0] == src)
+                path.RemoveAt(0); // remove the source cell from the path
+            if (path.Count == 0 || path.Count == 1)
+                continue;
+            areaPathMap[dst] = path;
+        }
+
+        return areaPathMap;
+    }
+
+    public List<TileCell> GetCellsInRange(TileCell src, int[,] pattern, bool testWalkable)
     {
         List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindPattern(src, pattern, true);
         List<TileCell> path = new List<TileCell>();
@@ -41,20 +59,7 @@ public class MapManager : MonoBehaviour
         return path;
     }
 
-    public List<TileCell> GetCellsInRange(TileCell src, int range)
-    {
-        List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindRange(src, range, true);
-        List<TileCell> path = new List<TileCell>();
-
-        foreach (var n in pathNodes)
-        {
-            path.Add(GetCellAtPosition(new Vector2Int(n.X, n.Y)));
-        }
-
-        return path;
-    }
-
-    public List<TileCell> GetRange(TileCell src, int range, bool testWalkable)
+    public List<TileCell> GetCellsInRange(TileCell src, int range, bool testWalkable)
     {
         List<IAStarNode> pathNodes = VoidAI.Pathfinding.AStarSearch.FindRange(src, range, testWalkable);
         List<TileCell> path = new List<TileCell>();

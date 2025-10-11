@@ -155,7 +155,7 @@ public class GameManager : MonoBehaviour
     {
         if (GameSubState != GameSubState.MOVE && MapManager.SelectedCell != null)
         {
-            List<TileCell> area = MapManager.GetRange(MapManager.SelectedCell, 3, false);
+            List<TileCell> area = MapManager.GetCellsInRange(MapManager.SelectedCell, 3, false);
             MapManager.SelectArea(area, GetAreaColor());
         }
         else

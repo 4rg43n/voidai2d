@@ -1,10 +1,37 @@
 using System.Collections;
 using UnityEngine;
 
+public enum AreaEffectType
+{ 
+    AREA=0,
+    WALKABLE_AREA,
+    PATH,
+}
+
+public enum AbilityType
+{ 
+    MOVE=0,
+    ATTACK,
+    MAGIC,
+    SKILL,
+    ITEM,
+}
+
+public enum EffectType
+{
+    ENEMY=0,
+    EMPTY_CELL,
+    FRIENDLY,
+}
+
 public abstract class GameAbility : MonoBehaviour
 {
     public delegate void OnGameAbilityStart(GridObject user, TileCell target);
     public delegate void OnGameAbilityComplete();
+
+    public AreaEffectType AreaEffectType = AreaEffectType.AREA;
+    public AbilityType AbilityType = AbilityType.ATTACK;
+    public EffectType EffectType = EffectType.ENEMY;
 
     [HideInInspector]
     public GridObject user;
