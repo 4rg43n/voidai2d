@@ -106,4 +106,8 @@ MonoBehaviour:
     Position: {x: 0, y: 0}
     WorldPosition: {x: 0, y: 0, z: 0}
     areaValue: -1
+  moveAbility: {fileID: -2647595924560424250, guid: 47bee45bb0b02c34589bafaff7f5d687, type: 3}
   attackAbility: {fileID: 1072858504356924196, guid: e037acd4af6072a49a75d78c83555cd5, type: 3}
+  magicAbility: {fileID: 3041387710826885034, guid: b3b57f8ca98b994419dac5ae20f62d61, type: 3}
+  skillAbility: {fileID: 3601775897604222286, guid: 10bf2d5942b7d674da1133751c773726, type: 3}
+  itemAbility: {fileID: -7782667563936563800, guid: 709a1809c50c5954983cfff3acac0e74, type: 3}

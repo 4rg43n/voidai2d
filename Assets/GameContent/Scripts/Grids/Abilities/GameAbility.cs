@@ -33,6 +33,8 @@ public abstract class GameAbility : MonoBehaviour
     public AbilityType AbilityType = AbilityType.ATTACK;
     public EffectType EffectType = EffectType.ENEMY;
 
+    public int Range = 1;
+
     [HideInInspector]
     public GridObject user;
     [HideInInspector]

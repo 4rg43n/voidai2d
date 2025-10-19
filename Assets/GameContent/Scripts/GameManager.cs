@@ -68,8 +68,16 @@ public class GameManager : MonoBehaviour
             else
             {
                 MapManager.SelectCell(cell);
+
                 MapManager.DeselectPath();
                 MapManager.DeselectArea();
+
+                GameAbility ability = GetSelectedGameAbility();
+                if (ability != null)
+                {
+                    DrawGameAreaAbilityArea();
+                }
+
             }
         }
 
@@ -143,6 +151,46 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    void DrawGameAreaAbilityArea()
+    {
+        GameAbility ability = GetSelectedGameAbility();
+        if (ability != null)
+        {
+            List<TileCell> area = null;
+            if (ability.AreaEffectType == AreaEffectType.AREA)
+            {
+                area = MapManager.GetCellsInRange(MapManager.SelectedCell, ability.Range, false);
+                MapManager.SelectArea(area, GetAreaColor());
+            }
+            else if (ability.AreaEffectType == AreaEffectType.WALKABLE_AREA)
+            {
+                area = MapManager.GetCellsInReachableArea(MapManager.SelectedCell, ability.Range, true);
+                MapManager.SelectArea(area, GetAreaColor());
+            }
+            else if (ability.AreaEffectType == AreaEffectType.PATH)
+            {
+                area = MapManager.GetShortestPath(MapManager.SelectedCell, ability.targetCell);
+                MapManager.SelectPath(area);
+            }
+        }
+    }
+
+    GameAbility GetSelectedGameAbility()
+    {
+        if (MapManager.SelectedCell == null || MapManager.SelectedCell.Contents == null)
+            return null;
+
+        return GameSubState switch
+        {
+            GameSubState.MOVE => MapManager.SelectedCell.Contents.moveAbility,
+            GameSubState.ATTACK => MapManager.SelectedCell.Contents.attackAbility,
+            GameSubState.MAGIC => MapManager.SelectedCell.Contents.magicAbility,
+            GameSubState.SKILL => MapManager.SelectedCell.Contents.skillAbility,
+            GameSubState.ITEM => MapManager.SelectedCell.Contents.itemAbility,
+            _ => null,
+        };
     }
 
     public void ShowFloatingText(string text, Vector3 position, Color color)

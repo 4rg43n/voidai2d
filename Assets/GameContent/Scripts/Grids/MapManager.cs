@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using UnityEngine;
 using VoidAI.Pathfinding;
@@ -28,7 +29,7 @@ public class MapManager : MonoBehaviour
         gridLineOverlay.drawGrid = gridLineOverlay.drawSquares = false;
     }
 
-    public Dictionary<TileCell, List<TileCell>> GetCellsInReachableArea(TileCell src, int range, bool testWalkable)
+    public List<TileCell> GetCellsInReachableArea(TileCell src, int range, bool testWalkable)
     {
         Dictionary<TileCell, List<TileCell>> areaPathMap = new Dictionary<TileCell, List<TileCell>>();
         List<TileCell> possibleArea = GetCellsInRange(src, range, testWalkable);
@@ -43,7 +44,7 @@ public class MapManager : MonoBehaviour
             areaPathMap[dst] = path;
         }
 
-        return areaPathMap;
+        return areaPathMap.Keys.ToList<TileCell>();
     }
 
     public List<TileCell> GetCellsInRange(TileCell src, int[,] pattern, bool testWalkable)
