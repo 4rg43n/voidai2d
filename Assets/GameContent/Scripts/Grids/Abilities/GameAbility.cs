@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum AreaEffectType
@@ -37,10 +38,11 @@ public abstract class GameAbility : MonoBehaviour
 
     [HideInInspector]
     public GridObject user;
+
     [HideInInspector]
-    public TileCell targetCell;
+    protected TileCell tempTargetCell;
     [HideInInspector]
-    public GridObject target;
+    protected GridObject tempTarget;
 
     public event OnGameAbilityStart OnAbilityStartEvent;
     public event OnGameAbilityComplete OnAbilityCompleteEvent;
@@ -48,16 +50,49 @@ public abstract class GameAbility : MonoBehaviour
     public abstract void DoStartAbility(GridObject user, TileCell target);
     public abstract void DoCompleteAbility();
 
+    int clickCount = 0;
+
+    public virtual bool UpdateClick(GameManager gameMgr, TileCell dst)
+    {
+        clickCount++;
+        if (clickCount > 1)
+            clickCount = 0;
+
+        if ( clickCount==0)
+        {
+            return false;
+        }
+
+        if (AreaEffectType == AreaEffectType.AREA)
+        {
+            gameMgr.DrawArea(user.Location, Range, false);
+        }
+        else if (AreaEffectType == AreaEffectType.WALKABLE_AREA)
+        {
+            gameMgr.DrawArea(user.Location, Range, true);
+        }
+        else if (AreaEffectType == AreaEffectType.PATH)
+        {
+            gameMgr.DrawPath(user.Location, dst);
+        }
+        else
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public void UseAbility(GridObject user, TileCell target)
     {
         this.user = user;
         if (target != null)
-            targetCell = target;
-        if (this.targetCell != null)
-            this.target = targetCell.Contents;
+            tempTargetCell = target;
+        if (this.tempTargetCell != null)
+            this.tempTarget = tempTargetCell.Contents;
 
 
-        if (this.target == null)
+        if (this.tempTarget == null)
         {
             Debug.Log(user.name + " attacks but there is no target in the cell!");
             FinishAbility();
@@ -66,6 +101,8 @@ public abstract class GameAbility : MonoBehaviour
 
         if (OnAbilityStartEvent != null)
             OnAbilityStartEvent(user, target);
+
+        clickCount = 0;
 
         DoStartAbility(user, target);
     }

@@ -15,6 +15,29 @@ public class GridObject : MonoBehaviour
     public GameAbility skillAbility; // if set, this ability will be used for skill attacks
     public GameAbility itemAbility; // if set, this ability will be used for item use
 
+    private void Start()
+    {
+        foreach (GameAbility ability in GetAllGameAbilities())
+            ability.user = this;
+    }
+
+    List<GameAbility> GetAllGameAbilities()
+    {
+        List<GameAbility> abilities = new List<GameAbility>();
+        if (moveAbility != null)
+            abilities.Add(moveAbility);
+        if (attackAbility != null)
+            abilities.Add(attackAbility);
+        if (magicAbility != null)
+            abilities.Add(magicAbility);
+        if (skillAbility != null)
+            abilities.Add(skillAbility);
+        if (itemAbility != null)
+            abilities.Add(itemAbility);
+
+        return abilities;
+    }
+
     public void SetLocation(TileCell cell)
     {
         if (Location != null)

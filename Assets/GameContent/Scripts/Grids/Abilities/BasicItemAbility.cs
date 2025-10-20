@@ -11,7 +11,7 @@ public class BasicItemAbility : GameAbility
 
     public override void DoStartAbility(GridObject user, TileCell targetCell)
     {
-        GameManager.Singleton.ShowFloatingText("" + damage, target.transform.position, Color.red);
+        GameManager.Singleton.ShowFloatingText("" + damage, tempTarget.transform.position, Color.red);
         FinishAbilityDelay(lifetime);
     }
 }

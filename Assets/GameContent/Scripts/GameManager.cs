@@ -60,24 +60,34 @@ public class GameManager : MonoBehaviour
         {
             TileCell cell = MapManager.OnMouseClick(Input.mousePosition);
 
-            if (MapManager.IsClickedSelectedCell(cell))
+            if (cell == null)
             {
-                MapManager.DeselectPath();
-                SelectArea();
+                MapManager.DeselectAll();
             }
             else
             {
                 MapManager.SelectCell(cell);
 
-                MapManager.DeselectPath();
-                MapManager.DeselectArea();
-
-                GameAbility ability = GetSelectedGameAbility();
-                if (ability != null)
+                if (MapManager.IsClickedSelectedArea(cell) || cell == MapManager.SelectedCell)
                 {
-                    DrawGameAreaAbilityArea();
+                    GameAbility ability = GetSelectedGameAbility();
+                    if (ability != null)
+                    {
+                        ability.UpdateClick(this, cell);
+                    }
+                    else
+                    {
+                        MapManager.DeselectArea();
+                        MapManager.DeselectPath();
+                        MapManager.SelectCell(cell);
+                    }
                 }
-
+                else
+                {
+                    MapManager.DeselectArea();
+                    MapManager.DeselectPath();
+                    MapManager.SelectCell(cell);
+                }
             }
         }
 
@@ -153,31 +163,19 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void DrawGameAreaAbilityArea()
+    public void DrawArea(TileCell src, int range, bool testWalkable)
     {
-        GameAbility ability = GetSelectedGameAbility();
-        if (ability != null)
-        {
-            List<TileCell> area = null;
-            if (ability.AreaEffectType == AreaEffectType.AREA)
-            {
-                area = MapManager.GetCellsInRange(MapManager.SelectedCell, ability.Range, false);
-                MapManager.SelectArea(area, GetAreaColor());
-            }
-            else if (ability.AreaEffectType == AreaEffectType.WALKABLE_AREA)
-            {
-                area = MapManager.GetCellsInReachableArea(MapManager.SelectedCell, ability.Range, true);
-                MapManager.SelectArea(area, GetAreaColor());
-            }
-            else if (ability.AreaEffectType == AreaEffectType.PATH)
-            {
-                area = MapManager.GetShortestPath(MapManager.SelectedCell, ability.targetCell);
-                MapManager.SelectPath(area);
-            }
-        }
+        List<TileCell> area = MapManager.GetCellsInRange(src, range, testWalkable);
+        MapManager.SelectArea(area, GetAreaColor());
     }
 
-    GameAbility GetSelectedGameAbility()
+    public void DrawPath(TileCell src, TileCell dst)
+    {
+        List<TileCell> path = MapManager.GetShortestPath(src, dst);
+        MapManager.SelectPath(path);
+    }
+
+    public GameAbility GetSelectedGameAbility()
     {
         if (MapManager.SelectedCell == null || MapManager.SelectedCell.Contents == null)
             return null;
@@ -212,7 +210,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    Color GetAreaColor()
+    public Color GetAreaColor()
     {
         return GameSubState switch
         {
