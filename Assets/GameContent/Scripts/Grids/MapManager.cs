@@ -12,10 +12,13 @@ public class MapManager : MonoBehaviour
 
     public Vector3 cellDims = new Vector3(1, 1, 0);
 
+    public GameObject pathMarkerPrefab;
+
     public int Width { get { return worldGenerator.width; } }
     public int Height { get { return worldGenerator.height; } }
     public List<TileCell> TileCells { get { return worldGenerator.TileCells; } }
     public TileCell SelectedCell { get { return selected; } }
+    public TileCell PreviousSelectedCell { get; private set; }
     public List<TileCell> SelectedPath { get { return selectedPath; } }
     public WorldGenerator WorldGenerator { get { return worldGenerator; } }
 
@@ -24,9 +27,31 @@ public class MapManager : MonoBehaviour
     List<TileCell> selectedArea = new();
     SpriteRenderer selMark;
 
+    List<GameObject> pathMarkerObjs = new List<GameObject>();
+
     private void Start()
     {
         gridLineOverlay.drawGrid = gridLineOverlay.drawSquares = false;
+    }
+
+    public List<TileCell> GetSelectedPathTo(TileCell dst)
+    {
+        List<TileCell> newPath = new List<TileCell>();
+
+        foreach (TileCell cell in selectedPath)
+        {
+            if (cell.Position == dst.Position)
+            {
+                newPath.Add(cell);
+                break;
+            }
+            else
+            {
+                newPath.Add(cell);
+            }
+        }
+
+        return newPath;
     }
 
     public List<TileCell> GetCellsInReachableArea(TileCell src, int range, bool testWalkable)
@@ -165,7 +190,7 @@ public class MapManager : MonoBehaviour
         }
 
         foreach (TileCell cell in selectedArea)
-            cell.OnDeselectPath();
+            cell.OnDeselectArea();
 
         selectedArea.Clear();
         gridLineOverlay.drawSquares = false;
@@ -184,6 +209,8 @@ public class MapManager : MonoBehaviour
         gridLineOverlay.drawSquares = true;
         gridLineOverlay.pathTiles.AddRange(paths);
         gridLineOverlay.pathColor = color;
+        foreach (TileCell cell in selectedArea)
+            cell.OnSelectArea();
     }
 
     public void DeselectPath()
@@ -194,12 +221,18 @@ public class MapManager : MonoBehaviour
         }
 
         foreach (TileCell cell in selectedPath)
+        {
             cell.OnDeselectPath();
+        }
+
+        foreach (GameObject go in pathMarkerObjs)
+            Destroy(go);
+        pathMarkerObjs.Clear();
 
         selectedPath.Clear();
-        gridLineOverlay.drawSquares = false;
-        gridLineOverlay.pathTiles.Clear();
-        gridLineOverlay.pathColor = gridLineOverlay.pathColorDefault;
+        //gridLineOverlay.drawSquares = false;
+        //gridLineOverlay.pathTiles.Clear();
+        //gridLineOverlay.pathColor = gridLineOverlay.pathColorDefault;
     }
 
     public void SelectPath(List<TileCell> paths)
@@ -210,14 +243,22 @@ public class MapManager : MonoBehaviour
         DeselectPath();
 
         selectedPath.AddRange(paths);
-        gridLineOverlay.drawSquares = true;
-        gridLineOverlay.pathTiles.AddRange(paths);
+        //gridLineOverlay.drawSquares = true;
+        //gridLineOverlay.pathTiles.AddRange(paths);
+        foreach (TileCell cell in selectedPath)
+        {
+            cell.OnSelectPath();
+            GameObject go = Instantiate(pathMarkerPrefab, cell.WorldPosition, Quaternion.identity);
+            pathMarkerObjs.Add(go);
+        }
     }
 
     public void DeselectCell()
     {
         if (selected == null)
             return;
+
+        PreviousSelectedCell = selected;
 
         if (selMark != null)
             Destroy(selMark.gameObject);

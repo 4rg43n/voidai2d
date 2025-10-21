@@ -44,14 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43108fbceb2416f47a42fa3bc645a269, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AreaEffectType: 0
+  AreaEffectType: 1
   AbilityType: 1
   EffectType: 0
-  Range: 3
+  Range: 10
   user: {fileID: 0}
-  targetCell:
-    world: {fileID: 0}
-    Position: {x: 0, y: 0}
-    WorldPosition: {x: 0, y: 0, z: 0}
-    areaValue: -1
-  target: {fileID: 0}

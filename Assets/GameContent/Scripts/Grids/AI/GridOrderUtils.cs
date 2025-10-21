@@ -95,6 +95,7 @@ public static class GridOrderUtils
         public override void DoComplete(object executer, OrderArgs args)
         {
             GameManager.Singleton.MapManager.DeselectPath();
+            GameManager.Singleton.MapManager.DeselectArea();
             GameManager.Singleton.MapManager.SelectCell(actor.Location);
         }
     }

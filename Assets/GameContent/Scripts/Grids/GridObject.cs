@@ -17,8 +17,31 @@ public class GridObject : MonoBehaviour
 
     private void Start()
     {
+        if (moveAbility != null)
+            moveAbility = Instantiate(moveAbility, transform);
+        if (attackAbility != null)
+            attackAbility = Instantiate(attackAbility, transform);
+        if (magicAbility != null)
+            magicAbility = Instantiate(magicAbility, transform);
+        if (skillAbility != null)
+            skillAbility = Instantiate(skillAbility, transform);
+        if (itemAbility != null)
+            itemAbility = Instantiate(itemAbility, transform);
+
         foreach (GameAbility ability in GetAllGameAbilities())
             ability.user = this;
+    }
+
+    public virtual void OnSelect()
+    {
+        foreach (GameAbility ability in GetAllGameAbilities())
+            ability.OnSelect();
+    }
+
+    public virtual void OnDeselect()
+    {
+        foreach (GameAbility ability in GetAllGameAbilities())
+            ability.OnDeselect();
     }
 
     List<GameAbility> GetAllGameAbilities()

@@ -66,23 +66,24 @@ public class GameManager : MonoBehaviour
             }
             else
             {
+                TileCell prevSel = MapManager.SelectedCell;
                 MapManager.SelectCell(cell);
+                GameAbility ability = GetSelectedGameAbility();
 
-                if (MapManager.IsClickedSelectedArea(cell) || cell == MapManager.SelectedCell)
+                bool res = false;
+                // clicked on the selected cell
+                if (ability != null && cell.Position == MapManager.SelectedCell.Position)
+                    res = ability.UpdateClick(this, cell);
+
+                // clicked in the area
+                ability = GetSelectedGameAbility(prevSel);
+                if (ability != null && MapManager.IsClickedSelectedArea(cell))
                 {
-                    GameAbility ability = GetSelectedGameAbility();
-                    if (ability != null)
-                    {
-                        ability.UpdateClick(this, cell);
-                    }
-                    else
-                    {
-                        MapManager.DeselectArea();
-                        MapManager.DeselectPath();
-                        MapManager.SelectCell(cell);
-                    }
+                    res = ability.UpdateClick(this, cell);
+                    MapManager.SelectCell(prevSel);
                 }
-                else
+
+                if (!res)
                 {
                     MapManager.DeselectArea();
                     MapManager.DeselectPath();
@@ -180,13 +181,21 @@ public class GameManager : MonoBehaviour
         if (MapManager.SelectedCell == null || MapManager.SelectedCell.Contents == null)
             return null;
 
+        return GetSelectedGameAbility(MapManager.SelectedCell);
+    }
+
+    public GameAbility GetSelectedGameAbility(TileCell src)
+    {
+        if (src == null || src.Contents == null)
+            return null;
+
         return GameSubState switch
         {
-            GameSubState.MOVE => MapManager.SelectedCell.Contents.moveAbility,
-            GameSubState.ATTACK => MapManager.SelectedCell.Contents.attackAbility,
-            GameSubState.MAGIC => MapManager.SelectedCell.Contents.magicAbility,
-            GameSubState.SKILL => MapManager.SelectedCell.Contents.skillAbility,
-            GameSubState.ITEM => MapManager.SelectedCell.Contents.itemAbility,
+            GameSubState.MOVE => src.Contents.moveAbility,
+            GameSubState.ATTACK => src.Contents.attackAbility,
+            GameSubState.MAGIC => src.Contents.magicAbility,
+            GameSubState.SKILL => src.Contents.skillAbility,
+            GameSubState.ITEM => src.Contents.itemAbility,
             _ => null,
         };
     }

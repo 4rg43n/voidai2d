@@ -57,13 +57,21 @@ public class TileCell:IAStarNode
     }
 
     public virtual void OnSelect()
-    { }
+    {
+        if (contents != null)
+            contents.OnSelect();
+    }
 
     public virtual void OnDeselect()
-    { }
+    {
+        if (contents != null)
+            contents.OnDeselect();
+    }
 
     public virtual void OnSelectPath() { }
     public virtual void OnDeselectPath() { }
+    public virtual void OnSelectArea() { }
+    public virtual void OnDeselectArea() { }
 
     public override string ToString()
     {

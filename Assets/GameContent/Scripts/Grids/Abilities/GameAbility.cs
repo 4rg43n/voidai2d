@@ -54,31 +54,51 @@ public abstract class GameAbility : MonoBehaviour
 
     public virtual bool UpdateClick(GameManager gameMgr, TileCell dst)
     {
-        clickCount++;
-        if (clickCount > 1)
-            clickCount = 0;
-
-        if ( clickCount==0)
+        if (gameMgr.MapManager.PreviousSelectedCell != null && 
+            gameMgr.MapManager.PreviousSelectedCell.Position != dst.Position && 
+            gameMgr.MapManager.IsClickedSelectedArea(dst))
         {
+            if (gameMgr.MapManager.IsClickedSelectedPath(dst))
+            {
+                List<TileCell> selPath = gameMgr.MapManager.GetSelectedPathTo(dst);
+                gameMgr.MoveObject(user.Location, dst, selPath);
+                gameMgr.MapManager.SelectPath(selPath);
+            }
+            else
+                gameMgr.DrawPath(user.Location, dst);
+            return true;
+        }
+
+
+        if (clickCount == 0)
+        {
+            clickCount = 1 - clickCount;
             return false;
-        }
-
-        if (AreaEffectType == AreaEffectType.AREA)
-        {
-            gameMgr.DrawArea(user.Location, Range, false);
-        }
-        else if (AreaEffectType == AreaEffectType.WALKABLE_AREA)
-        {
-            gameMgr.DrawArea(user.Location, Range, true);
-        }
-        else if (AreaEffectType == AreaEffectType.PATH)
-        {
-            gameMgr.DrawPath(user.Location, dst);
         }
         else
         {
-            return false;
+            if (dst.Position == user.Location.Position)
+            {
+                if (AreaEffectType == AreaEffectType.AREA)
+                {
+                    gameMgr.DrawArea(user.Location, Range, false);
+                }
+                else if (AreaEffectType == AreaEffectType.WALKABLE_AREA)
+                {
+                    gameMgr.DrawArea(user.Location, Range, true);
+                }
+                else if (AreaEffectType == AreaEffectType.PATH)
+                {
+                    gameMgr.DrawPath(user.Location, dst);
+                }
+                else
+                {
+                    Debug.LogError("Unknown AreaEffectType: " + AreaEffectType.ToString());
+                }
+                clickCount = 1 - clickCount;
+            }
         }
+
 
         return true;
     }
@@ -127,5 +147,14 @@ public abstract class GameAbility : MonoBehaviour
         yield return new WaitForSeconds(time);
 
         FinishAbility();
+    }
+    public virtual void OnSelect()
+    {
+        clickCount = 0;
+    }
+
+    public virtual void OnDeselect()
+    {
+        clickCount = 0;
     }
 }
