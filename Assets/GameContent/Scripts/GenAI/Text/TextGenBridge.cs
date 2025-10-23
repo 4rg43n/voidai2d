@@ -12,7 +12,7 @@ namespace VoidAI.GenAI.Text
         public string ollamaURL = "http://localhost:11434/api/generate";
         public string modelName = LLM_Model_Defs.INSTRUCT_LLM;
 
-        public static int numSending = 0;
+        static int numSending = 0;
         public static bool IsSending { get { return numSending > 0; } }
 
         private void Awake()

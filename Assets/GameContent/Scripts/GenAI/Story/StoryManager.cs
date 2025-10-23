@@ -30,7 +30,7 @@ namespace VoidAI.GenAI.Story
             TextGenBridge textBridge = TextGenBridge.Singleton;
             string prompt = BuildPrompt("observe");
 
-            textBridge.SendToLLM(prompt, storyContext.PlayerData.dataName, LLM_Model_Defs.CHARACTER_LLM, (resp) => { HandleLLMOutput(resp); });
+            textBridge.SendToLLM(prompt, storyContext.CurrentFrame.PlayerData.dataName, LLM_Model_Defs.CHARACTER_LLM, (resp) => { HandleLLMOutput(resp); });
         }
 
         void HandleLLMOutput(string response)
@@ -42,12 +42,12 @@ namespace VoidAI.GenAI.Story
         {
             StoryContext newStoryContext = new StoryContext();
             List<string[]> parsedData = DataUtils.ParseData(resourcePathName);
-            newStoryContext.LocationData = new LocationData();
-            newStoryContext.LocationData.LoadFromResourcePath(parsedData);
+            newStoryContext.CurrentFrame.LocationData = new LocationData();
+            newStoryContext.CurrentFrame.LocationData.LoadFromResourcePath(parsedData);
 
 
-            newStoryContext.PlayerData = new PlayerData();
-            newStoryContext.PlayerData.dataName = testPlayerName;
+            newStoryContext.CurrentFrame.PlayerData = new PlayerData();
+            newStoryContext.CurrentFrame.PlayerData.dataName = testPlayerName;
 
 
             return newStoryContext;
@@ -57,7 +57,7 @@ namespace VoidAI.GenAI.Story
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"You are the narrator. The world is {storyContext.Tone}.");
-            sb.AppendLine($"The {storyContext.PlayerData.dataName} is currently in: {storyContext.LocationData.dataDescription}");
+            sb.AppendLine($"The {storyContext.CurrentFrame.PlayerData.dataName} is currently in: {storyContext.CurrentFrame.LocationData.dataDescription}");
             sb.AppendLine();
 
             //sb.AppendLine(BuildRecentMemory(context));
@@ -71,7 +71,7 @@ namespace VoidAI.GenAI.Story
             sb.AppendLine($"You are simply the narrator, describing what the player sees — do not insert yourself or commentary.");
 
 
-            sb.AppendLine($"Describe what {storyContext.PlayerData.dataName} sees in 1–2 short cinematic sentences, using second-person perspective.");
+            sb.AppendLine($"Describe what {storyContext.CurrentFrame.PlayerData.dataName} sees in 1–2 short cinematic sentences, using second-person perspective.");
             sb.AppendLine("Begin the description with 'You...' or use 'you see...' where appropriate.");
             sb.AppendLine("Mention the environment and any characters present by name.");
             sb.AppendLine("Use the character's name when describing them (e.g., 'Zara stands near the flowers').");
@@ -90,7 +90,7 @@ namespace VoidAI.GenAI.Story
             //sb.AppendLine("<thought>You drift off to sleep hoping the nightmares won't find you.</thought>");
             //sb.AppendLine();
 
-            sb.AppendLine($"{storyContext.PlayerData.dataName} input: {input}");
+            sb.AppendLine($"{storyContext.CurrentFrame.PlayerData.dataName} input: {input}");
 
             return sb.ToString();
         }
