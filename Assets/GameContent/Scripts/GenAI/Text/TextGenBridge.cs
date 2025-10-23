@@ -20,7 +20,11 @@ namespace VoidAI.GenAI.Text
             Singleton = this;
         }
 
-        public IEnumerator SendToLLM(string prompt, string speakerName, string modelName, System.Action<string> callback)
+        public IEnumerator SendToLLM(
+            string prompt, 
+            string speakerName, 
+            string modelName, 
+            System.Action<string> callback)
         {
             string json = JsonUtility.ToJson(new RequestPayload
             {
