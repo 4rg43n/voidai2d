@@ -20,7 +20,12 @@ namespace VoidAI.GenAI.Text
             Singleton = this;
         }
 
-        public IEnumerator SendToLLM(
+        public void SendToLLM(string prompt, string speakerName, string modelName, System.Action<string> callback)
+        {
+            StartCoroutine(_SendToLLM(prompt, speakerName, modelName, callback));
+        }
+
+        IEnumerator _SendToLLM(
             string prompt, 
             string speakerName, 
             string modelName, 
