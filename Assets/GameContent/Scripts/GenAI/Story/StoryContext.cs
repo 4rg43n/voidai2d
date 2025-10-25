@@ -10,6 +10,7 @@ namespace VoidAI.GenAI.Story
     {
         public string Tone = "modern";
 
+        public NarratorData narrator;
         public List<StoryFrame> storyFrames = new();
 
         public StoryFrame CurrentFrame { get { return storyFrames[storyFrames.Count - 1]; } }

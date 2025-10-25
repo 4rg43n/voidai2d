@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Text;
 using UnityEngine;
@@ -20,7 +21,7 @@ namespace VoidAI.GenAI.Text
             Singleton = this;
         }
 
-        public void SendToLLM(string prompt, string speakerName, string modelName, System.Action<string> callback)
+        public void SendToLLM(string prompt, string speakerName, string modelName, System.Action<MessageLLM> callback)
         {
             StartCoroutine(_SendToLLM(prompt, speakerName, modelName, callback));
         }
@@ -29,7 +30,7 @@ namespace VoidAI.GenAI.Text
             string prompt, 
             string speakerName, 
             string modelName, 
-            System.Action<string> callback)
+            System.Action<MessageLLM> callback)
         {
             string json = JsonUtility.ToJson(new RequestPayload
             {
@@ -53,13 +54,21 @@ namespace VoidAI.GenAI.Text
                     numSending--;
                     ResponsePayload response = JsonUtility.FromJson<ResponsePayload>(request.downloadHandler.text);
                     string reply = response.response.Trim();
-                    callback(reply);
+
+                    MessageLLM msg = new MessageLLM(reply)
+                    {
+                        speakerName = speakerName,
+                        modelName = modelName,
+                        prompt = prompt,
+                    };
+
+                    callback(msg);
                 }
                 else
                 {
                     numSending--;
                     Debug.LogError("LLM request failed: " + request.error);
-                    callback("...");
+                    callback(new MessageLLM("..."));
                 }
             }
         }
@@ -76,6 +85,20 @@ namespace VoidAI.GenAI.Text
         public class ResponsePayload
         {
             public string response;
+        }
+    }
+
+    public class MessageLLM
+    {
+        public string speakerName;
+        public string modelName;
+        public string prompt;
+
+        public string response;
+
+        public MessageLLM(string resp)
+        {
+            response = resp;
         }
     }
 }

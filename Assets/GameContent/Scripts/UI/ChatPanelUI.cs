@@ -5,6 +5,7 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using VoidAI.GenAI.Text;
 
 public class ChatPanelUI : MonoBehaviour
 {
@@ -19,9 +20,6 @@ public class ChatPanelUI : MonoBehaviour
 
     public Transform root;
     public bool startVis = true;
-
-    public Button enterImg;
-    public Button leaveImg;
 
     bool isVis = true;
 
@@ -43,17 +41,7 @@ public class ChatPanelUI : MonoBehaviour
 
     private void Update()
     {
-        //inputField.enabled = !StorySceneManager.Singleton.IsSendding;
-    }
-
-    public void PressedEnter()
-    {
-        //GameMgr.Singleton.MoveDown();
-    }
-
-    public void PressedLeave()
-    {
-        //GameMgr.Singleton.MoveUp(GameMgr.Singleton.SelectedLocationPuck);
+        inputField.enabled = !TextGenBridge.IsSending;
     }
 
     public void ToggleVis()
@@ -85,48 +73,18 @@ public class ChatPanelUI : MonoBehaviour
         if (msg.Length == 0)
             return;
 
-        //AddMessage(msg, true);
-
-        OnSubmit(msg);
-        //StorySceneManager.Singleton.SubmitInput(msg);
-        //if (StorySceneManager.Singleton.GenerateLLMResponse_Narrator(msg, OnResponseComplete))
-        //{
-        //    lastInput = msg;
-        //    inputField.enabled = false;
-        //}
+        AddPlayerMessage(msg);
+        OnSubmit?.Invoke(msg);
     }
 
-    public void AddCharacterMessage(string name, string cinematic)
+    public void AddCharacterMessage(string name, string msg)
     {
-        AddMessage($"<b>{name}</b>: {cinematic}", false);
+        AddMessage($"<b>{name}</b>: {msg}", false);
     }
 
     public void AddPlayerMessage(string input)
     {
         AddMessage(input, true);
-    }
-
-    //public void JustSendMsg(string msg)
-    //{
-    //    if (StorySceneManager.Singleton.GenerateLLMResponse_InputRouter(msg, OnRoutingResponseComplete))
-    //    {
-    //        lastInput = msg;
-    //        inputField.enabled = false;
-    //    }
-    //}
-
-    //public void OnResponseComplete(string response)
-    //{
-    //    string[] responses = StorySceneManager.Singleton.OnResponseComplete_Narrator(response);
-
-    //    AddMessage(responses[0], false);
-    //    SetInputFocus();
-    //    inputField.enabled = true;
-    //}
-
-    public void SubmitResponse(string msg)
-    {
-        AddMessage(msg, false);
     }
 
     public void AddMessage(string message, bool isPlayer)

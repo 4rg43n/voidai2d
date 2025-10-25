@@ -14,28 +14,45 @@ namespace VoidAI.GenAI.Story
         private void Start()
         {
             storyContext = LoadStoryFromResources(resourcePathName);
+            ChatPanelUI.Singleton.OnSubmit += (input) => { HandleInput(input); };
         }
 
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.T))
-            {
-                Debug.Log("Starting LLM cal==========>");
-                HandleInput();
-            }
-        }
+        //private void Update()
+        //{
+        //    if (Input.GetKeyDown(KeyCode.T))
+        //    {
+        //        Debug.Log("Starting LLM cal==========>");
+        //        HandleInput();
+        //    }
+        //}
 
-        public void HandleInput()
+        public void HandleInput(string input)
         {
+            Debug.Log($"Sending to LLM={input}");
             TextGenBridge textBridge = TextGenBridge.Singleton;
-            string prompt = BuildPrompt("observe");
+            string prompt = BuildPrompt(input);
 
-            textBridge.SendToLLM(prompt, storyContext.CurrentFrame.PlayerData.dataName, LLM_Model_Defs.CHARACTER_LLM, (resp) => { HandleLLMOutput(resp); });
+            textBridge.SendToLLM(
+                prompt, 
+                storyContext.CurrentFrame.PlayerData.dataName, 
+                LLM_Model_Defs.CHARACTER_LLM, 
+                (resp) => { HandleLLMOutput(resp); });
         }
 
-        void HandleLLMOutput(string response)
+        void HandleLLMOutput(MessageLLM messageLLM)
         {
-            Debug.Log($"LLM: {response}");
+            messageLLM.speakerName = storyContext.narrator.dataName;
+            StoryMessageLLM storyMessageLLM = new StoryMessageLLM()
+            {
+                messageData = messageLLM,
+                agentRole = storyContext.narrator.agentRole,
+                promptType = "narration"
+            };
+
+            Debug.Log($"LLM: {messageLLM.response}");
+            ChatPanelUI.Singleton.AddCharacterMessage(storyContext.narrator.dataName, messageLLM.response);
+
+            storyMessageLLM.LogDetails();
         }
 
         StoryContext LoadStoryFromResources(string resourcePathName)
@@ -49,6 +66,7 @@ namespace VoidAI.GenAI.Story
             newStoryContext.CurrentFrame.PlayerData = new PlayerData();
             newStoryContext.CurrentFrame.PlayerData.dataName = testPlayerName;
 
+            newStoryContext.narrator = new NarratorData() { agentRole = "narrator", dataName="Narrator" };
 
             return newStoryContext;
         }
@@ -65,20 +83,22 @@ namespace VoidAI.GenAI.Story
             //sb.AppendLine(BuildCharacterDescriptions(context));
             //sb.AppendLine();
 
+            sb.AppendLine($"Narration Guidelines:");
+            sb.AppendLine($"    * There are no AI companions, avatars, or artificial entities present in this world unless explicitly described.");
+            sb.AppendLine($"    * Do NOT mention or reference yourself, the LLM, the model, or any abstract narrator entity outside the story.");
+            sb.AppendLine($"    * You are simply the narrator, describing what the player sees — do not insert yourself or commentary.");
 
-            sb.AppendLine($"There are no AI companions, avatars, or artificial entities present in this world unless explicitly described.");
-            sb.AppendLine($"Do NOT mention or reference yourself, the LLM, the model, or any abstract narrator entity outside the story.");
-            sb.AppendLine($"You are simply the narrator, describing what the player sees — do not insert yourself or commentary.");
+            sb.AppendLine();
 
-
-            sb.AppendLine($"Describe what {storyContext.CurrentFrame.PlayerData.dataName} sees in 1–2 short cinematic sentences, using second-person perspective.");
-            sb.AppendLine("Begin the description with 'You...' or use 'you see...' where appropriate.");
-            sb.AppendLine("Mention the environment and any characters present by name.");
-            sb.AppendLine("Use the character's name when describing them (e.g., 'Zara stands near the flowers').");
-            sb.AppendLine("Only describe outward appearances, posture, and actions. Do NOT describe internal thoughts or emotions.");
-            sb.AppendLine("Avoid quoting speech or assuming relationships.");
-            sb.AppendLine("Maintain an immersive, neutral tone.");
-            sb.AppendLine("Do NOT speak from the perspective of any character. Avoid inner thoughts or dialogue.");
+            sb.AppendLine($"Output Guidelines:");
+            sb.AppendLine($"    * Describe what {storyContext.CurrentFrame.PlayerData.dataName} sees in 1–2 short cinematic sentences, using second-person perspective.");
+            sb.AppendLine("    * Begin the description with 'You...' or use 'you see...' where appropriate.");
+            sb.AppendLine("    * Mention the environment and any characters present by name.");
+            sb.AppendLine("    * Use the character's name when describing them (e.g., 'Zara stands near the flowers').");
+            sb.AppendLine("    * Only describe outward appearances, posture, and actions. Do NOT describe internal thoughts or emotions.");
+            sb.AppendLine("    * Avoid quoting speech or assuming relationships.");
+            sb.AppendLine("    * Maintain an immersive, neutral tone.");
+            sb.AppendLine("    * Do NOT speak from the perspective of any character. Avoid inner thoughts or dialogue.");
             sb.AppendLine();
 
             //sb.AppendLine("After the description, include a single line like this:");
@@ -93,6 +113,24 @@ namespace VoidAI.GenAI.Story
             sb.AppendLine($"{storyContext.CurrentFrame.PlayerData.dataName} input: {input}");
 
             return sb.ToString();
+        }
+    }
+
+    public class StoryMessageLLM
+    {
+        public MessageLLM messageData;
+        public string agentRole;
+        public string promptType;
+
+        public void LogDetails()
+        {
+            PromptLogManager.Instance.LogPrompt(
+                agentName: messageData.speakerName,
+                agentType: agentRole,
+                promptType: promptType,
+                modelName: TextGenBridge.Singleton.modelName,
+                prompt: messageData.prompt,
+                response: messageData.response);
         }
     }
 }
