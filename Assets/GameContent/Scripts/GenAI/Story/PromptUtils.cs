@@ -57,7 +57,7 @@ namespace VoidAI.GenAI.Story
             sb.AppendLine($"    Character Name: {characterData.dataName}");
             sb.AppendLine($"        * Age: {characterData.characterAge}");
             sb.AppendLine($"        * Height: {characterData.characterHeight}");
-            sb.AppendLine($"        * Appearance: {characterData.dataDescription}");
+            sb.AppendLine($"        * Appearance: {characterData.characterAppearance}");
             sb.AppendLine($"        * Description: {characterData.dataDescription}");
             sb.AppendLine($"        * Likes: {characterData.characterLikes}");
             sb.AppendLine($"        * Dislikes: {characterData.characterDislikes}");
@@ -106,9 +106,19 @@ namespace VoidAI.GenAI.Story
             sb.AppendLine("    * Do NOT speak from the perspective of any character. Avoid inner thoughts or dialogue.");
             sb.AppendLine();
 
+            sb.AppendLine("Character Block Rules (very important):");
+            sb.AppendLine("    * For EACH character in the scene, output EXACTLY TWO sentences inside <CHARACTER name='...'>…</CHARACTER>:");
+            sb.AppendLine("      1) Physical snapshot: appearance / posture / clothing (no thoughts).");
+            sb.AppendLine($"      2) One short observable behavior TOWARD {storyContext.CurrentFrame.PlayerData.dataName},");
+            sb.AppendLine("         starting with the character’s name (e.g., 'Rin stands apart from Raven, keeping her distance.').");
+            sb.AppendLine("    * Use strictly observable cues for attitude (e.g., keeps distance, gaze lingers, jaw tightens, fists clenched).");
+            sb.AppendLine("    * Do NOT use mind-reading words (feels, thinks, wants, hopes, longs, desires, yearns).");
+            sb.AppendLine();
+
             sb.AppendLine("Output Format Guidelines:");
             sb.AppendLine("    * ALWAYS include exactly one description of the scene without any characters and prefix it with <LOCATION>");
             sb.AppendLine("    * ALWAYS include character descriptions prefixed with <CHARACTER name='character_name'> for each character in the scene.");
+            sb.AppendLine("    * ALWAYS end the output with a single <END> tag.");
             //sb.AppendLine("    * Do NOT include any dialogue or thoughts.");
 
             sb.AppendLine();
@@ -116,6 +126,7 @@ namespace VoidAI.GenAI.Story
             sb.AppendLine("Example Output:");
             sb.AppendLine("<LOCATION>You find yourself in a sunlit meadow, the grass swaying gently in the breeze under a clear blue sky.</LOCATION>");
             sb.AppendLine("<CHARACTER name='Zara'>Zara stands near a cluster of wildflowers, her auburn hair catching the sunlight as she gazes into the distance.</CHARACTER>");
+            sb.AppendLine("<END>");
             sb.AppendLine();
 
             //sb.AppendLine("After the description, include a single line like this:");
@@ -126,11 +137,14 @@ namespace VoidAI.GenAI.Story
             //sb.AppendLine("<thought>You were spoiling for a fight. Now you've got one.</thought>");
             //sb.AppendLine("<thought>You drift off to sleep hoping the nightmares won't find you.</thought>");
             //sb.AppendLine();
-
-            sb.AppendLine("The text between <INPUT> and </INPUT> represents Raven’s latest action or observation.");
-            sb.AppendLine("Respond as the narrator describing Raven’s point of view.");
-            sb.AppendLine("When you finish writing the final </CHARACTER> tag, STOP IMMEDIATELY.");
-            sb.AppendLine("Do not add anything after </CHARACTER>.");
+            sb.AppendLine("Response Guidelines:");
+            sb.AppendLine($"    * The text between <INPUT> and </INPUT> represents {storyContext.CurrentFrame.PlayerData.dataName}’s latest action or observation.");
+            sb.AppendLine($"    * Respond as the narrator describing {storyContext.CurrentFrame.PlayerData.dataName}’s point of view.");
+            //sb.AppendLine("When you finish writing the final </CHARACTER> tag, STOP IMMEDIATELY.");
+            //sb.AppendLine("Do not add anything after </CHARACTER>.");
+            sb.AppendLine("    * When you finish writing the final <END> tag, STOP IMMEDIATELY.");
+            sb.AppendLine("    * Do not add anything after <END>.");
+            sb.AppendLine();
             sb.AppendLine();
             sb.AppendLine("<INPUT>");
             sb.AppendLine(input);

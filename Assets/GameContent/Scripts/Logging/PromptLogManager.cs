@@ -54,12 +54,13 @@ public class PromptLogManager : MonoBehaviour
         string promptType, 
         string modelName, 
         string prompt, 
+        string originalResponse,
         string response)
     {
-        var entry = new PromptLogEntry(agentName, agentType, modelName, prompt, response);
+        var entry = new PromptLogEntry(agentName, agentType, modelName, prompt, originalResponse, response);
         logEntries.Add(entry);
 
-        string line = $"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss}] {agentType} '{agentName}' PROMPT TYPE:{promptType}(model: {modelName})\nPROMPT: {prompt}\nRESPONSE: {response}\n";
+        string line = $"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss}] {agentType} '{agentName}' PROMPT TYPE:{promptType}(model: {modelName})\nPROMPT: {prompt}\nRAW RESPONSE: {originalResponse}\n\nRESPONSE: {response}\n";
         AppendToFile(line);
         Debug.Log($"[LLM LOG] [{agentName}] {prompt} => {response}");
     }

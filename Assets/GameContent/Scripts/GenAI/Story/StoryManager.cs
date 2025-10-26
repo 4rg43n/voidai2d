@@ -87,6 +87,7 @@ namespace VoidAI.GenAI.Story
                 promptType: promptType,
                 modelName: TextGenBridge.Singleton.modelName,
                 prompt: messageData.prompt,
+                originalResponse: messageData.originalResponse,
                 response: messageData.response);
         }
     }
