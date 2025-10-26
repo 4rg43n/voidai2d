@@ -40,7 +40,8 @@ namespace VoidAI.GenAI.Text
                 model = modelName,
                 prompt = prompt,
                 stream = false,
-                stop = defaultStop.ToArray()
+                stop = defaultStop.ToArray(),
+                options = new Options()
             });
 
             using (UnityWebRequest request = UnityWebRequest.PostWwwForm(ollamaURL, "POST"))
@@ -80,7 +81,6 @@ namespace VoidAI.GenAI.Text
                         speakerName = speakerName,
                         modelName = modelName,
                         prompt = prompt,
-                        originalResponse=originalReply,
                     };
 
                     callback(msg);
@@ -101,6 +101,17 @@ namespace VoidAI.GenAI.Text
             public string prompt;
             public bool stream;
             public string[] stop;
+            public Options options;
+        }
+
+        [System.Serializable]
+        public class Options
+        {
+            public int num_predict = 512;   // how many tokens to predict (default 128 if omitted)
+            public int num_ctx = 4096;      // total context size
+            public float temperature = 0.8f;
+            public float top_p = 0.9f;
+            public float repeat_penalty = 1.15f;
         }
 
         [System.Serializable]

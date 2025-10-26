@@ -18,21 +18,41 @@ namespace VoidAI.GenAI.Text
 
         public MessageLLM(string resp)
         {
-            response = resp;
+            originalResponse = resp;
+            response = RemoveLineMarkersAndNormalizeWhitespace(resp);
         }
 
         public void ParseResponseTags()
         {
-            parsedTags = ParseTags(response);
+            string cleanedResponse = RemoveLineMarkersAndNormalizeWhitespace(response);
+            parsedTags = ParseTags(cleanedResponse);
 
             if (parsedTags == null || parsedTags.Count == 0)
             {
                 parsedTags = new List<MessageLLMTag>();
-                parsedTags.Add(new MessageLLMTag() { tag = "LOCATION", value = response });
+                parsedTags.Add(new MessageLLMTag() { tag = "LOCATION", value = cleanedResponse });
                 Debug.LogWarning("Response didn't contain proper tags, making everything LOCATION.");
             }
         }
 
+        /// <summary>
+        /// Removes [N] markers like [1], [2], etc., and collapses any runs of
+        /// two or more whitespace characters into a single space.
+        /// </summary>
+        public static string RemoveLineMarkersAndNormalizeWhitespace(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            // Remove [N] markers (e.g., [1], [12])
+            string result = Regex.Replace(input, @"\[\d+\]\s*", string.Empty);
+
+            // Replace multiple spaces, tabs, or newlines with a single space
+            result = Regex.Replace(result, @"\s{2,}", " ");
+
+            // Trim leading/trailing whitespace
+            return result.Trim();
+        }
 
         /// <summary>
         /// Parses a string containing XML-like tags into a list of MessageLLMTag objects.

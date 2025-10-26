@@ -46,7 +46,28 @@ namespace VoidAI.GenAI.Story
             }
         }
 
-        static string BuildCharacterList(StoryContext storyContext)
+        static string BuildCharacterNameList(StoryContext storyContext)
+        {
+            var sb = new System.Text.StringBuilder();
+
+            CharacterData[] characters = new CharacterData[]
+            {
+                storyContext.CurrentFrame.CharacterData
+            };
+
+            for(int i = 0;i < characters.Length; i++)
+            {
+                var c = characters[i];
+                sb.Append(c.dataName);
+                if (i < characters.Length - 1)
+                    sb.Append(", ");
+            }
+
+
+            return sb.ToString();
+        }
+
+        static string BuildCharacterDescriptionList(StoryContext storyContext)
         {
             var sb = new System.Text.StringBuilder();
 
@@ -100,10 +121,10 @@ namespace VoidAI.GenAI.Story
 
             // Characters (verbatim, so the model knows exactly who to output)
             sb.AppendLine("Characters Present (output one <CHARACTER> block for each, in this order):");
-            sb.AppendLine(BuildCharacterList(storyContext));
+            sb.AppendLine(BuildCharacterDescriptionList(storyContext));
             sb.AppendLine();
 
-            // One place for narration rules
+            // Narration rules
             sb.AppendLine("Narration Guidelines:");
             sb.AppendLine("  * ONLY respond to content between the <INPUT> tags.");
             sb.AppendLine("  * Maintain an immersive, neutral tone.");
@@ -111,54 +132,73 @@ namespace VoidAI.GenAI.Story
             sb.AppendLine("  * Do NOT mention or reference the LLM, model, assistant, or yourself.");
             sb.AppendLine();
 
-            // Output structure: declare once, explicitly
+            // Output structure
             sb.AppendLine("Output Structure (exactly this, nothing else):");
             sb.AppendLine("  <LOCATION>…</LOCATION>");
             sb.AppendLine("  <CHARACTER name='…'>…</CHARACTER>  (one per character listed above, in order)");
             sb.AppendLine("  <END>");
             sb.AppendLine();
 
-            // Location rules
-            // Location rules
+            // LOCATION rules with labeled lines
             sb.AppendLine("LOCATION Rules:");
-            sb.AppendLine($"  * Write the LOCATION as EXACTLY FOUR sentences in second person describing what {player} sees.");
-            sb.AppendLine("  * Begin with 'You...' or 'You see...'.");
-            sb.AppendLine("  * End each sentence with a period. Do NOT use semicolons or em dashes to join clauses.");
-            sb.AppendLine("  * Focus on environment; you may mention characters by name if visible.");
+            sb.AppendLine("  * Inside <LOCATION>…</LOCATION> output EXACTLY these 4 lines, one per line:");
+            sb.AppendLine("    [1] <one sentence in 2nd person describing the environment>");
+            sb.AppendLine("    [2] <one sentence in 2nd person describing the environment>");
+            sb.AppendLine("    [3] <one sentence in 2nd person describing the environment>");
+            sb.AppendLine("    [4] <one sentence in 2nd person describing the environment>");
+            sb.AppendLine("  * Do NOT mention or refer to any characters in LOCATION (no names, titles, or pronouns).");
+            sb.AppendLine("  * No blank lines inside <LOCATION>. No extra lines beyond [1]-[4].");
             sb.AppendLine();
 
-            // Character rules (single source of truth)
+            // Forbidden character references inside LOCATION (hard ban)
+            string characterNames = BuildCharacterNameList(storyContext);
+            sb.AppendLine("Forbidden in LOCATION:");
+            if (!string.IsNullOrWhiteSpace(characterNames))
+                sb.AppendLine($"  * Any of these names or references: {characterNames}"); // append others if present
+            sb.AppendLine("  * Any third-person pronoun referring to characters (he, she, they, her, him, them).");
+            sb.AppendLine();
+
+            // CHARACTER rules (single source of truth)
+            // CHARACTER rules (use [1]/[2] consistently)
             sb.AppendLine("CHARACTER Rules (very important):");
-            sb.AppendLine("  * For EACH character, write EXACTLY TWO sentences inside <CHARACTER name='...'>…</CHARACTER>:");
-            sb.AppendLine("    1) Physical snapshot: appearance / posture / clothing (no thoughts).");
-            sb.AppendLine($"    2) One short, observable behavior TOWARD {player}, starting with the character’s name.");
-            sb.AppendLine("       Examples: 'Rin keeps a careful distance from Raven.' 'Rin’s gaze lingers on Raven.' 'Rin glares at Raven, fists clenched.'");
-            sb.AppendLine("  * Use strictly observable cues (keeps distance, gaze lingers, jaw tightens, fists clenched).");
+            sb.AppendLine("  * For EACH character, inside <CHARACTER name='...'>…</CHARACTER> output EXACTLY these 2 lines:");
+            sb.AppendLine("    [1] One sentence describing the character’s physical snapshot — appearance, posture, or clothing. No inner thoughts.");
+            sb.AppendLine($"    [2] One short, observable behavior directed TOWARD {player}, starting with the character’s name.");
+            sb.AppendLine("  * Each line must end with a period. No blank lines. No extra lines beyond [1] and [2].");
+            sb.AppendLine("  * Do NOT use placeholders or ellipses: '...', '…', 'N/A'.");
+            sb.AppendLine("  * Use strictly observable cues (distance, gaze, body tension).");
             sb.AppendLine("  * Do NOT use mind-reading words: feels, thinks, wants, hopes, longs, desires, yearns, loves, hates.");
             sb.AppendLine("  * No quoted dialogue.");
             sb.AppendLine();
 
-            // --- Replace your whole example section with this ---
-
-            // Show structure only (no prose for the model to mimic)
+            // --- Structure example, no parentheses ---
             sb.AppendLine("Example Output (STRUCTURE ONLY — do not copy wording):");
-            sb.AppendLine("<LOCATION>{4 sentences in 2nd person describing the environment}</LOCATION>");
-            sb.AppendLine($"<CHARACTER name='{{Name}}'>{{1 sentence physical snapshot}}. {{1 sentence observable behavior toward {player}}}.</CHARACTER>");
+            sb.AppendLine("<LOCATION>");
+            sb.AppendLine("[1] {sentence}");
+            sb.AppendLine("[2] {sentence}");
+            sb.AppendLine("[3] {sentence}");
+            sb.AppendLine("[4] {sentence}");
+            sb.AppendLine("</LOCATION>");
+            sb.AppendLine("<CHARACTER name='{Name}'>");
+            sb.AppendLine("[1] {One sentence describing physical appearance, posture, or clothing.}");
+            sb.AppendLine($"[2] {{One short, observable behavior toward {player}, starting with the character’s name.}}");
+            sb.AppendLine("</CHARACTER>");
             sb.AppendLine("<END>");
             sb.AppendLine();
 
-            // Make it explicit that content shouldn't be copied
+            // Originality + format constraints
             sb.AppendLine("Originality Rules:");
             sb.AppendLine("  * Do NOT reuse exact phrases from examples; examples indicate structure only.");
             sb.AppendLine("  * Vary sentence openings; avoid starting two sentences with the same two-word phrase.");
-            sb.AppendLine("  * Include at least one sensory detail (sound, motion, texture, temperature, light) not shown in the examples.");
+            sb.AppendLine("  * Include at least one sensory detail (sound, motion, texture, temperature, light).");
             sb.AppendLine();
 
-            // Hard format constraints (keep these near the end for recency)
             sb.AppendLine("Hard Format Constraints:");
             sb.AppendLine("  * The FIRST non-whitespace characters MUST be exactly \"<LOCATION>\".");
-            sb.AppendLine("  * Output must match this exact tag order: <LOCATION> … </LOCATION> then one or more <CHARACTER …> … </CHARACTER>, then <END>.");
+            sb.AppendLine("  * Tag order MUST be: <LOCATION>…</LOCATION> then <CHARACTER…>…</CHARACTER> (one per listed character), then <END>.");
             sb.AppendLine("  * Do NOT write any text before <LOCATION> or after <END>.");
+            sb.AppendLine("  * Placeholders are forbidden anywhere: '...', '…', 'N/A'.");
+            sb.AppendLine();
 
             // Response bounds & input
             sb.AppendLine("Response Bounds:");
