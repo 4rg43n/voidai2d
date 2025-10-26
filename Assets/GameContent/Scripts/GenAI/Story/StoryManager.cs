@@ -8,12 +8,13 @@ namespace VoidAI.GenAI.Story
     public class StoryManager : MonoBehaviour
     {
         public StoryContext storyContext;
-        public string resourcePathName = "Test/white_void";
+        public string locationPathName = "Test/location_white_void";
+        public string characterPathName = "Test/character_rin";
         public string testPlayerName = "Raven";
 
         private void Start()
         {
-            storyContext = LoadStoryFromResources(resourcePathName);
+            storyContext = LoadStoryFromResources(new string[] { locationPathName,characterPathName});
             ChatPanelUI.Singleton.OnSubmit += (input) => { HandleInput(input); };
         }
 
@@ -30,7 +31,7 @@ namespace VoidAI.GenAI.Story
         {
             Debug.Log($"Sending to LLM={input}");
             TextGenBridge textBridge = TextGenBridge.Singleton;
-            string prompt = BuildPrompt(input);
+            string prompt = PromptUtils.BuildPrompt(input, PromptType.Narration, storyContext);
 
             textBridge.SendToLLM(
                 prompt, 
@@ -55,64 +56,20 @@ namespace VoidAI.GenAI.Story
             storyMessageLLM.LogDetails();
         }
 
-        StoryContext LoadStoryFromResources(string resourcePathName)
+        StoryContext LoadStoryFromResources(string[] resourcePathNames)
         {
             StoryContext newStoryContext = new StoryContext();
-            List<string[]> parsedData = DataUtils.ParseData(resourcePathName);
-            newStoryContext.CurrentFrame.LocationData = new LocationData();
-            newStoryContext.CurrentFrame.LocationData.LoadFromResourcePath(parsedData);
-
 
             newStoryContext.CurrentFrame.PlayerData = new PlayerData();
             newStoryContext.CurrentFrame.PlayerData.dataName = testPlayerName;
 
+            newStoryContext.CurrentFrame.LocationData=DataUtils.LoadDataFromResources<LocationData>(resourcePathNames[0], newStoryContext.CurrentFrame.PlayerData.dataName);
+            newStoryContext.CurrentFrame.CharacterData=DataUtils.LoadDataFromResources<CharacterData>(resourcePathNames[1], newStoryContext.CurrentFrame.PlayerData.dataName);
+
+
             newStoryContext.narrator = new NarratorData() { agentRole = "narrator", dataName="Narrator" };
 
             return newStoryContext;
-        }
-
-        string BuildPrompt(string input)
-        {
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"You are the narrator. The world is {storyContext.Tone}.");
-            sb.AppendLine($"The {storyContext.CurrentFrame.PlayerData.dataName} is currently in: {storyContext.CurrentFrame.LocationData.dataDescription}");
-            sb.AppendLine();
-
-            //sb.AppendLine(BuildRecentMemory(context));
-            //sb.AppendLine(BuildCurrentFacts(context));
-            //sb.AppendLine(BuildCharacterDescriptions(context));
-            //sb.AppendLine();
-
-            sb.AppendLine($"Narration Guidelines:");
-            sb.AppendLine($"    * There are no AI companions, avatars, or artificial entities present in this world unless explicitly described.");
-            sb.AppendLine($"    * Do NOT mention or reference yourself, the LLM, the model, or any abstract narrator entity outside the story.");
-            sb.AppendLine($"    * You are simply the narrator, describing what the player sees — do not insert yourself or commentary.");
-
-            sb.AppendLine();
-
-            sb.AppendLine($"Output Guidelines:");
-            sb.AppendLine($"    * Describe what {storyContext.CurrentFrame.PlayerData.dataName} sees in 1–2 short cinematic sentences, using second-person perspective.");
-            sb.AppendLine("    * Begin the description with 'You...' or use 'you see...' where appropriate.");
-            sb.AppendLine("    * Mention the environment and any characters present by name.");
-            sb.AppendLine("    * Use the character's name when describing them (e.g., 'Zara stands near the flowers').");
-            sb.AppendLine("    * Only describe outward appearances, posture, and actions. Do NOT describe internal thoughts or emotions.");
-            sb.AppendLine("    * Avoid quoting speech or assuming relationships.");
-            sb.AppendLine("    * Maintain an immersive, neutral tone.");
-            sb.AppendLine("    * Do NOT speak from the perspective of any character. Avoid inner thoughts or dialogue.");
-            sb.AppendLine();
-
-            //sb.AppendLine("After the description, include a single line like this:");
-            //sb.AppendLine("<thought>[a poetic narrator-style summary of what’s happening or what the moment means]</thought>");
-            //sb.AppendLine("This is not a character thought. It is a narrative reflection, as if closing the scene.");
-            //sb.AppendLine("Examples:");
-            //sb.AppendLine("<thought>You and Zara talk long into the night.</thought>");
-            //sb.AppendLine("<thought>You were spoiling for a fight. Now you've got one.</thought>");
-            //sb.AppendLine("<thought>You drift off to sleep hoping the nightmares won't find you.</thought>");
-            //sb.AppendLine();
-
-            sb.AppendLine($"{storyContext.CurrentFrame.PlayerData.dataName} input: {input}");
-
-            return sb.ToString();
         }
     }
 

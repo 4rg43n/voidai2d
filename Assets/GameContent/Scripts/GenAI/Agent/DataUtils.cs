@@ -7,6 +7,14 @@ namespace VoidAI.GenAI.Agent
 
     public static class DataUtils
     {
+        public static T LoadDataFromResources<T>(string resourcePath, string userName) where T : BaseData, new()
+        {
+            List<string[]> parsedData = ParseData(resourcePath);
+            T dataInstance = new T();
+            dataInstance.LoadFromResourcePath(parsedData, userName);
+            return dataInstance;
+        }
+
         public static List<string[]> ParseData(string resourcePath)
         {
             List<string> lines = ReadLinesFromResources(resourcePath);

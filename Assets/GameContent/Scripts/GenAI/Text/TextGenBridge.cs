@@ -36,7 +36,8 @@ namespace VoidAI.GenAI.Text
             {
                 model = modelName,
                 prompt = prompt,
-                stream = false
+                stream = false,
+                stop = new string[] { "</CHARACTER>" } // new string[] { "</CHARACTER>", "<END>" }
             });
 
             using (UnityWebRequest request = UnityWebRequest.PostWwwForm(ollamaURL, "POST"))
@@ -54,6 +55,11 @@ namespace VoidAI.GenAI.Text
                     numSending--;
                     ResponsePayload response = JsonUtility.FromJson<ResponsePayload>(request.downloadHandler.text);
                     string reply = response.response.Trim();
+
+                    // TODO: This is not generic enough, fix later
+                    int idx = reply.IndexOf("</CHARACTER>", StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0)
+                        reply = reply.Substring(0, idx + "</CHARACTER>".Length);
 
                     MessageLLM msg = new MessageLLM(reply)
                     {
@@ -79,6 +85,7 @@ namespace VoidAI.GenAI.Text
             public string model;
             public string prompt;
             public bool stream;
+            public string[] stop;
         }
 
         [System.Serializable]

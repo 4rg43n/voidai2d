@@ -10,6 +10,7 @@ namespace VoidAI.GenAI.Story
     {
         public PlayerData PlayerData;
         public LocationData LocationData;
+        public CharacterData CharacterData;
         public List<MemoryEntry> memories = new();
     }
 }
