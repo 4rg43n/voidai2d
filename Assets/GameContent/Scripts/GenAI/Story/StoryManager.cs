@@ -51,6 +51,8 @@ namespace VoidAI.GenAI.Story
             };
 
             Debug.Log($"LLM: {messageLLM.response}");
+
+            storyMessageLLM.ParseResponse();
             ChatPanelUI.Singleton.AddCharacterMessage(storyContext.narrator.dataName, messageLLM.response);
 
             storyMessageLLM.LogDetails();
@@ -89,6 +91,11 @@ namespace VoidAI.GenAI.Story
                 prompt: messageData.prompt,
                 originalResponse: messageData.originalResponse,
                 response: messageData.response);
+        }
+
+        public void ParseResponse()
+        {
+            messageData.ParseResponseTags();
         }
     }
 }

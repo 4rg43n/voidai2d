@@ -110,18 +110,6 @@ namespace VoidAI.GenAI.Text
         }
     }
 
-    public class MessageLLM
-    {
-        public string speakerName;
-        public string modelName;
-        public string prompt;
-
-        public string originalResponse;
-        public string response;
-
-        public MessageLLM(string resp)
-        {
-            response = resp;
-        }
-    }
 }
+
+
