@@ -77,9 +77,9 @@ public class ChatPanelUI : MonoBehaviour
         OnSubmit?.Invoke(msg);
     }
 
-    public void AddCharacterMessage(string name, string msg)
+    public void AddCharacterMessage(string msg)
     {
-        AddMessage($"<b>{name}</b>: {msg}", false);
+        AddMessage($"{msg}", false);
     }
 
     public void AddPlayerMessage(string input)

@@ -1,29 +1,12 @@
-using System;
-using System.Data;
-using TreeEditor;
-using Unity.VisualScripting;
-using Unity.VisualScripting.Antlr3.Runtime;
-using UnityEditor.PackageManager.UI;
-using UnityEditor.Sprites;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.LookDev;
-using UnityEngine.TextCore.Text;
-using UnityEngine.UIElements;
 using VoidAI.GenAI.Agent;
-using VoidAI.GenAI.Story;
-using static Unity.VisualScripting.Icons;
-using static UnityEngine.EventSystems.EventTrigger;
 
 namespace VoidAI.GenAI.Story
 {
     public enum PromptType
     {
         Narration,
-        CharacterDialogue,
-        CharacterThought,
-        WorldEvent,
+        Character,
     }
 
     public static class PromptUtils
@@ -34,8 +17,8 @@ namespace VoidAI.GenAI.Story
             {
                 case PromptType.Narration:
                     return BuildPrompt_Narration(input, storyContext);
-                //case PromptType.CharacterDialogue:
-                //    return BuildPrompt_CharacterDialogue(input);
+                case PromptType.Character:
+                    return BuildPrompt_Character(input, storyContext);
                 //case PromptType.CharacterThought:
                 //    return BuildPrompt_CharacterThought(input);
                 //case PromptType.WorldEvent:
@@ -44,6 +27,91 @@ namespace VoidAI.GenAI.Story
                     Debug.LogError($"Unsupported PromptType: {promptType}");
                     return "...";
             }
+        }
+
+        static string BuildPrompt_Character(string input, StoryContext storyContext)
+        {
+            var player = storyContext.CurrentFrame.PlayerData.dataName;
+            var character = storyContext.CurrentFrame.CharacterData;
+            var location = storyContext.CurrentFrame.LocationData.locationDescription;
+
+            var sb = new System.Text.StringBuilder();
+
+            // Identity & context
+            sb.AppendLine($"You are {character.dataName}.");
+            sb.AppendLine($"{character.dataName} is {character.characterAge} years old, {character.characterHeight} tall.");
+            sb.AppendLine($"{character.dataName}’s appearance: {character.characterAppearance}");
+            sb.AppendLine($"{character.dataName}’s relationship to {player}: {character.characterRelationship}");
+            sb.AppendLine($"{character.dataName}’s personality: {character.characterPersonality}");
+            sb.AppendLine();
+            sb.AppendLine($"The world is {storyContext.Tone}.");
+            sb.AppendLine($"You are currently in: {location}");
+            sb.AppendLine();
+
+            // Character constraints
+            sb.AppendLine("Character Guidelines:");
+            sb.AppendLine("  * Write only what the player can observe or hear from you.");
+            sb.AppendLine("  * Maintain natural tone, consistent with your personality.");
+            sb.AppendLine("  * Do NOT include the narrator, system messages, or meta commentary.");
+            sb.AppendLine("  * Do NOT reference the LLM, model, or assistant.");
+            sb.AppendLine("  * Do NOT repeat the player's input unless it is being directly echoed as part of natural dialogue.");
+            sb.AppendLine();
+
+            // Output structure
+            sb.AppendLine("Output Structure (exactly this, nothing else):");
+            sb.AppendLine("  <THOUGHT>…</THOUGHT>   (your private, unspoken thoughts — keep brief, consistent with personality)");
+            sb.AppendLine("  <ACTION>…</ACTION>     (a visible action or physical response the player can observe)");
+            sb.AppendLine("  <DIALOGUE>…</DIALOGUE> (spoken line, if you choose to speak — or leave empty if silent)");
+            sb.AppendLine("  <END>");
+            sb.AppendLine();
+
+            // Tag content rules
+            sb.AppendLine("THOUGHT Rules:");
+            sb.AppendLine("  * Write 1–2 short sentences capturing your immediate emotional or mental reaction.");
+            sb.AppendLine("  * Keep thoughts private — do NOT address the player directly in <THOUGHT>.");
+            sb.AppendLine("  * No long inner monologues or exposition.");
+            sb.AppendLine();
+
+            sb.AppendLine("ACTION Rules:");
+            sb.AppendLine("  * Write 1–2 short sentences describing visible movement, posture, or facial expression.");
+            sb.AppendLine("  * Use third person (e.g., 'Rin glances away' or 'Rin’s hand trembles slightly').");
+            sb.AppendLine("  * Do NOT include dialogue, thoughts, or interpretation.");
+            sb.AppendLine();
+
+            sb.AppendLine("DIALOGUE Rules:");
+            sb.AppendLine($"  * If you speak to {player}, write natural, concise dialogue inside <DIALOGUE>…</DIALOGUE>.");
+            sb.AppendLine("  * Keep it realistic and in tone with personality.");
+            sb.AppendLine("  * Do NOT repeat thoughts or describe actions here.");
+            sb.AppendLine("  * May be empty if you stay silent.");
+            sb.AppendLine();
+
+            // Example
+            sb.AppendLine("Example Output (STRUCTURE ONLY — do not copy wording):");
+            sb.AppendLine("<THOUGHT> {private thought, 1–2 sentences} </THOUGHT>");
+            sb.AppendLine("<ACTION> {visible physical behavior, 1–2 sentences} </ACTION>");
+            sb.AppendLine("<DIALOGUE> {spoken line or empty} </DIALOGUE>");
+            sb.AppendLine("<END>");
+            sb.AppendLine();
+
+            // Hard format constraints
+            sb.AppendLine("Hard Format Constraints:");
+            sb.AppendLine("  * The FIRST non-whitespace characters MUST be exactly \"<THOUGHT>\".");
+            sb.AppendLine("  * Tag order MUST be <THOUGHT>…</THOUGHT>, then <ACTION>…</ACTION>, then <DIALOGUE>…</DIALOGUE>, then <END>.");
+            sb.AppendLine("  * Do NOT add any tags beyond these four.");
+            sb.AppendLine("  * Do NOT write anything before <THOUGHT> or after <END>.");
+            sb.AppendLine();
+
+            // Response bounds & input
+            sb.AppendLine("Response Bounds:");
+            sb.AppendLine($"  * The text between <INPUT> and </INPUT> is {player}’s latest action or statement.");
+            sb.AppendLine("  * After writing <END>, STOP. Do not add anything after <END>.");
+            sb.AppendLine();
+            sb.AppendLine("<INPUT>");
+            sb.AppendLine(input);
+            sb.AppendLine("</INPUT>");
+            sb.AppendLine();
+
+            return sb.ToString();
         }
 
         static string BuildCharacterNameList(StoryContext storyContext)
@@ -55,7 +123,7 @@ namespace VoidAI.GenAI.Story
                 storyContext.CurrentFrame.CharacterData
             };
 
-            for(int i = 0;i < characters.Length; i++)
+            for (int i = 0; i < characters.Length; i++)
             {
                 var c = characters[i];
                 sb.Append(c.dataName);
@@ -71,9 +139,9 @@ namespace VoidAI.GenAI.Story
         {
             var sb = new System.Text.StringBuilder();
 
-            CharacterData[] characters = new CharacterData[] 
-            { 
-                storyContext.CurrentFrame.CharacterData 
+            CharacterData[] characters = new CharacterData[]
+            {
+                storyContext.CurrentFrame.CharacterData
             };
 
             foreach (var c in characters)
@@ -92,8 +160,11 @@ namespace VoidAI.GenAI.Story
             sb.AppendLine($"    - {characterData.dataName}");
             sb.AppendLine($"        * Age: {characterData.characterAge}");
             sb.AppendLine($"        * Height: {characterData.characterHeight}");
+
             sb.AppendLine($"        * Appearance: {characterData.characterAppearance}");
-            sb.AppendLine($"        * Relationship to {storyContext.CurrentFrame.PlayerData.dataName}: {characterData.dataDescription}");
+            sb.AppendLine($"        * Relationship to {storyContext.CurrentFrame.PlayerData.dataName}: {characterData.characterRelationship}");
+            sb.AppendLine($"        * Personality: {characterData.characterPersonality}");
+
             sb.AppendLine($"        * Likes: {characterData.characterLikes}");
             sb.AppendLine($"        * Dislikes: {characterData.characterDislikes}");
             sb.AppendLine($"        * Special Traits: {characterData.characterSpecialTraits}");
@@ -105,7 +176,7 @@ namespace VoidAI.GenAI.Story
         static string BuildPrompt_Narration(string input, StoryContext storyContext)
         {
             var player = storyContext.CurrentFrame.PlayerData.dataName;
-            var location = storyContext.CurrentFrame.LocationData.dataDescription;
+            var location = storyContext.CurrentFrame.LocationData.locationDescription;
             var sb = new System.Text.StringBuilder();
 
             // Identity & scope
@@ -212,86 +283,5 @@ namespace VoidAI.GenAI.Story
 
             return sb.ToString();
         }
-
-        //static string BuildPrompt_Narration(string input, StoryContext storyContext)
-        //{
-        //    var sb = new System.Text.StringBuilder();
-        //    sb.AppendLine($"You are the narrator. The world is {storyContext.Tone}.");
-
-        //    sb.AppendLine("You are not an AI assistant, chatbot, or language model.");
-        //    sb.AppendLine("You are a neutral third - person narrator describing what the player sees.");
-        //    sb.AppendLine("Never refer to yourself or your role as an assistant or AI.");
-
-        //    sb.AppendLine();
-
-        //    sb.AppendLine($"The {storyContext.CurrentFrame.PlayerData.dataName} is currently in: {storyContext.CurrentFrame.LocationData.dataDescription}");
-        //    sb.AppendLine();
-
-        //    //sb.AppendLine(BuildRecentMemory(context));
-        //    //sb.AppendLine(BuildCurrentFacts(context));
-        //    sb.AppendLine(BuildCharacterDescriptions(storyContext));
-
-        //    sb.AppendLine($"Narration Guidelines:");
-        //    sb.AppendLine("    * ONLY respond to content between the <INPUT> tags.");
-        //    sb.AppendLine($"    * There are no AI companions, avatars, or artificial entities present in this world unless explicitly described.");
-        //    sb.AppendLine($"    * Do NOT mention or reference yourself, the LLM, the model, or any abstract narrator entity outside the story.");
-        //    sb.AppendLine($"    * You are simply the narrator, describing what the player sees — do not insert yourself or commentary.");
-        //    sb.AppendLine("    * Maintain an immersive, neutral tone.");
-
-        //    sb.AppendLine();
-
-        //    sb.AppendLine("Output Format Guidelines:");
-        //    sb.AppendLine("    * ALWAYS include exactly one description of the scene without any characters and tag it with <LOCATION>");
-        //    sb.AppendLine("    * ALWAYS include character descriptions tagged with <CHARACTER name='character_name'> for each character in the scene.");
-        //    sb.AppendLine("    * ALWAYS end the output with a single <END> tag.");
-
-        //    sb.AppendLine();
-
-        //    sb.AppendLine("Location Tag Rules (very important):");
-        //    sb.AppendLine($"    * Describe what {storyContext.CurrentFrame.PlayerData.dataName} sees in 1–2 short cinematic sentences, using second-person perspective.");
-        //    sb.AppendLine("    * Begin the description with 'You...' or use 'you see...' where appropriate.");
-        //    sb.AppendLine("    * Mention the environment and any characters present by name.");
-        //    sb.AppendLine("    * For EACH character in the scene, output EXACTLY TWO sentences inside <CHARACTER name='...'>…</CHARACTER>:");
-        //    sb.AppendLine("      1) Physical snapshot: appearance / posture / clothing (no thoughts).");
-        //    sb.AppendLine($"      2) One short observable behavior TOWARD {storyContext.CurrentFrame.PlayerData.dataName},");
-        //    sb.AppendLine("         starting with the character’s name (e.g., 'Rin stands apart from Raven, keeping her distance.').");
-        //    sb.AppendLine("    * Use strictly observable cues for attitude (e.g., keeps distance, gaze lingers, jaw tightens, fists clenched).");
-        //    sb.AppendLine("    * Do NOT use mind-reading words (feels, thinks, wants, hopes, longs, desires, yearns).");
-        //    sb.AppendLine();
-
-        //    sb.AppendLine("Character Tag Rules (very important):");
-        //    sb.AppendLine("    * Use the character's name when describing them (e.g., 'Zara stands near the flowers').");
-        //    sb.AppendLine("    * For EACH character in the scene, output EXACTLY TWO sentences inside <CHARACTER name='...'>…</CHARACTER>:");
-        //    sb.AppendLine("    * Avoid quoting speech or assuming relationships.");
-        //    sb.AppendLine("    * Do NOT speak from the perspective of any character. Avoid inner thoughts or dialogue.");
-        //    sb.AppendLine("    * Only describe outward appearances, posture, and actions. Do NOT describe internal thoughts or emotions.");
-        //    sb.AppendLine("      1) Physical snapshot: appearance / posture / clothing (no thoughts).");
-        //    sb.AppendLine($"      2) One short observable behavior TOWARD {storyContext.CurrentFrame.PlayerData.dataName},");
-        //    sb.AppendLine("         starting with the character’s name (e.g., 'Rin stands apart from Raven, keeping her distance.').");
-        //    sb.AppendLine("    * Use strictly observable cues for attitude (e.g., keeps distance, gaze lingers, jaw tightens, fists clenched).");
-        //    sb.AppendLine("    * Do NOT use mind-reading words (feels, thinks, wants, hopes, longs, desires, yearns).");
-
-        //    sb.AppendLine();
-
-        //    sb.AppendLine("Example Output:");
-        //    sb.AppendLine("<LOCATION>You find yourself in a sunlit meadow, the grass swaying gently in the breeze under a clear blue sky.</LOCATION>");
-        //    sb.AppendLine("<CHARACTER name='Zara'>Zara stands near a cluster of wildflowers, her auburn hair catching the sunlight as she gazes into the distance.</CHARACTER>");
-        //    sb.AppendLine("<END>");
-        //    sb.AppendLine();
-
-        //    sb.AppendLine("Response Guidelines:");
-        //    sb.AppendLine($"    * The text between <INPUT> and </INPUT> represents {storyContext.CurrentFrame.PlayerData.dataName}’s latest action or observation.");
-        //    sb.AppendLine($"    * Respond as the narrator describing {storyContext.CurrentFrame.PlayerData.dataName}’s point of view.");
-        //    sb.AppendLine("    * When you finish writing the final <END> tag, STOP IMMEDIATELY.");
-        //    sb.AppendLine("    * Do not add anything after <END>.");
-        //    sb.AppendLine();
-        //    sb.AppendLine();
-        //    sb.AppendLine("<INPUT>");
-        //    sb.AppendLine(input);
-        //    sb.AppendLine("</INPUT>");
-        //    sb.AppendLine();
-
-        //    return sb.ToString();
-        //}
     }
 }

@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace VoidAI.GenAI.Agent
 {
     [Serializable]
     public abstract class BaseData
     {
-        public static string user_descriptor="{{user}}";
+        public static string user_descriptor = "{{user}}";
 
         public string dataId = "";
         public string dataName = "New Data";
-        public string dataDescription = "Description";
 
         public BaseData()
         {
@@ -21,15 +19,12 @@ namespace VoidAI.GenAI.Agent
         public virtual void LoadFromResourcePath(List<string[]> parsedData, string userName)
         {
             // Override in derived classes to load data from resources
-            foreach(var entry in parsedData)
+            foreach (var entry in parsedData)
             {
-                switch(entry[0])
+                switch (entry[0])
                 {
                     case "dataName":
                         dataName = entry.Length > 1 ? ReplaceAll(entry[1], user_descriptor, userName) : dataName;
-                        break;
-                    case "dataDescription":
-                        dataDescription = entry.Length > 1 ? ReplaceAll(entry[1], user_descriptor, userName) : dataDescription;
                         break;
                 }
             }

@@ -3,12 +3,14 @@ using RX.UI;
 using RX.Utils;
 using System.Collections.Generic;
 using UnityEngine;
+using VoidAI.GenAI.Story;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Singleton;
 
     public MapManager MapManager;
+    public StoryManager StoryManager;
 
     public FloatingTextUI floatingTextPrefab;
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace VoidAI.GenAI.Agent
 {
@@ -11,7 +10,11 @@ namespace VoidAI.GenAI.Agent
         public string characterAge = "25";
         public string characterGender = "Female";
         public string characterHeight = "5 feet 7 inches";
+
         public string characterAppearance = "Long brown hair, green eyes, athletic build";
+        public string characterRelationship = "Friendly and supportive towards others";
+        public string characterPersonality = "Optimistic, curious, and compassionate";
+
         public string characterLikes = "Reading, hiking, and cooking";
         public string characterDislikes = "Loud noises and crowds";
         public string characterSpecialTraits = "Highly empathetic and a quick learner";
@@ -34,9 +37,17 @@ namespace VoidAI.GenAI.Agent
                     case "characterHeight":
                         characterHeight = entry.Length > 1 ? ReplaceAll(entry[1], user_descriptor, userName) : characterHeight;
                         break;
+
                     case "characterAppearance":
                         characterAppearance = entry.Length > 1 ? ReplaceAll(entry[1], user_descriptor, userName) : characterAppearance;
                         break;
+                    case "characterRelationship":
+                        characterRelationship = entry.Length > 1 ? ReplaceAll(entry[1], user_descriptor, userName) : characterRelationship;
+                        break;
+                    case "characterPersonality":
+                        characterPersonality = entry.Length > 1 ? ReplaceAll(entry[1], user_descriptor, userName) : characterPersonality;
+                        break;
+
                     case "characterLikes":
                         characterLikes = entry.Length > 1 ? ReplaceAll(entry[1], user_descriptor, userName) : characterLikes;
                         break;
