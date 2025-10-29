@@ -7,6 +7,7 @@ namespace VoidAI.GenAI.Story
     public class StoryManager : MonoBehaviour
     {
         public StoryContext storyContext;
+        public string testScenarioName = "Test/rins_confession";
         public string locationPathName = "Test/location_white_void";
         public string characterPathName = "Test/character_rin";
         public string testPlayerName = "Raven";
@@ -21,8 +22,14 @@ namespace VoidAI.GenAI.Story
 
         private void Start()
         {
-            storyContext = LoadStoryFromResources(new string[] { locationPathName, characterPathName });
+            //storyContext = LoadStoryFromResources(new string[] { locationPathName, characterPathName });
+            storyContext = DataUtils.LoadStoryFromResources(testScenarioName, testPlayerName);
+            Debug.Log($"Loaded test story title={storyContext.Title}");
             ChatPanelUI.Singleton.OnSubmit += (input) => { HandleInput(input); };
+
+            ChatPanelUI.Singleton.AddCharacterMessage(storyContext.FirstMessage);
+
+            //TagOutputSanitizer.TestSanitizer();
         }
 
         //private void Update()
@@ -36,11 +43,17 @@ namespace VoidAI.GenAI.Story
 
         public void HandleInput(string input)
         {
+            PromptType promptType = PromptType.Character;
+
+            if (input.Trim().ToLower() == "observe" || input.Trim().ToLower() == "look")
+                promptType = PromptType.Narration;
+
             Debug.Log($"Sending to LLM={input}");
             TextGenBridge textBridge = TextGenBridge.Singleton;
-            string prompt = PromptUtils.BuildPrompt(input, testPromptType, storyContext);
+            string prompt = PromptUtils.BuildPrompt(input, promptType, storyContext);
 
             textBridge.SendToLLM(
+                input,
                 prompt,
                 storyContext.CurrentFrame.PlayerData.dataName,
                 LLM_Model_Defs.CHARACTER_LLM,
@@ -49,6 +62,7 @@ namespace VoidAI.GenAI.Story
 
         void HandleLLMOutput(MessageLLM messageLLM)
         {
+            // fill out the message data
             messageLLM.speakerName = storyContext.narrator.dataName;
             StoryMessageLLM storyMessageLLM = new StoryMessageLLM()
             {
@@ -59,11 +73,18 @@ namespace VoidAI.GenAI.Story
 
             Debug.Log($"LLM: {messageLLM.response}");
 
-            storyMessageLLM.ParseResponse();
-            storyMessageLLM.CreateFormattedResponse();
+            // process memories and facts
+            storyContext.AddNewFrame();
+            // TODO: process memories and facts here
+            storyContext.CurrentFrame.StoryResponse = storyMessageLLM;
+
+            // format for printing
+            storyContext.CurrentFrame.StoryResponse.ParseResponse();
+            storyContext.CurrentFrame.StoryResponse.CreateFormattedResponse();
+
             ChatPanelUI.Singleton.AddCharacterMessage(storyMessageLLM.formattedResponse);
 
-            storyMessageLLM.LogDetails();
+            storyContext.CurrentFrame.StoryResponse.LogDetails();
         }
 
         StoryContext LoadStoryFromResources(string[] resourcePathNames)
@@ -101,6 +122,17 @@ namespace VoidAI.GenAI.Story
                 prompt: messageData.prompt,
                 originalResponse: messageData.originalResponse,
                 response: messageData.response);
+        }
+
+        public StoryMessageLLM Clone()
+        {
+            return new StoryMessageLLM()
+            {
+                messageData = this.messageData,
+                agentRole = this.agentRole,
+                promptType = this.promptType,
+                formattedResponse = this.formattedResponse
+            };
         }
 
         public void CreateFormattedResponse()

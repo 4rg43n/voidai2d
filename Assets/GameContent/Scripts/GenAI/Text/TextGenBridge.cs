@@ -24,12 +24,13 @@ namespace VoidAI.GenAI.Text
             Singleton = this;
         }
 
-        public void SendToLLM(string prompt, string speakerName, string modelName, System.Action<MessageLLM> callback)
+        public void SendToLLM(string input, string prompt, string speakerName, string modelName, System.Action<MessageLLM> callback)
         {
-            StartCoroutine(_SendToLLM(prompt, speakerName, modelName, callback));
+            StartCoroutine(_SendToLLM(input, prompt, speakerName, modelName, callback));
         }
 
         IEnumerator _SendToLLM(
+            string input,
             string prompt, 
             string speakerName, 
             string modelName, 
@@ -81,6 +82,7 @@ namespace VoidAI.GenAI.Text
                         speakerName = speakerName,
                         modelName = modelName,
                         prompt = prompt,
+                        playerInput=input,
                     };
 
                     callback(msg);

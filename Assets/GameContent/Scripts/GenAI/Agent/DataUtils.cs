@@ -1,12 +1,21 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using VoidAI.GenAI.Story;
 
 namespace VoidAI.GenAI.Agent
 {
 
     public static class DataUtils
     {
+        public static StoryContext LoadStoryFromResources(string resourcePath, string userName)
+        {
+            List<string[]> parsedData = ParseData(resourcePath);
+            StoryContext storyContext = new StoryContext();
+            storyContext.LoadFromResourcePath(parsedData, userName);
+            return storyContext;
+        }   
+
         public static T LoadDataFromResources<T>(string resourcePath, string userName) where T : BaseData, new()
         {
             List<string[]> parsedData = ParseData(resourcePath);

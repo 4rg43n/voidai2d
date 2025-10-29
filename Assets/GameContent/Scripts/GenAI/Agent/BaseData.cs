@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace VoidAI.GenAI.Agent
 {
-    [Serializable]
     public abstract class BaseData
     {
         public static string user_descriptor = "{{user}}";
@@ -29,6 +28,8 @@ namespace VoidAI.GenAI.Agent
                 }
             }
         }
+
+        public abstract BaseData Clone();
 
         /// <summary>
         /// Replaces all occurrences of a given substring in a string with another substring.

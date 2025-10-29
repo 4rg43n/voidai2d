@@ -11,6 +11,8 @@ namespace VoidAI.GenAI.Text
         public string modelName;
         public string prompt;
 
+        public string playerInput;
+
         public string originalResponse;
         public string response;
 

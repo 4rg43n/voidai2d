@@ -48,6 +48,25 @@ namespace VoidAI.GenAI.Story
             sb.AppendLine($"You are currently in: {location}");
             sb.AppendLine();
 
+            sb.AppendLine($"The player is {player}.");
+            sb.AppendLine($"    - Age: {storyContext.PlayerData.dataName}.");
+            sb.AppendLine($"    - Gender: {storyContext.PlayerData.playerGender}.");
+            sb.AppendLine($"    - Height: {storyContext.PlayerData.playerHeight}.");
+            sb.AppendLine($"    - Appearance: {storyContext.PlayerData.playerAppearance}.");
+            sb.AppendLine();
+
+            // Scenario information
+            sb.AppendLine("Scenario Information:");
+            sb.AppendLine($"    {storyContext.Scenario}");
+            sb.AppendLine();
+
+            // Memories
+            string memories = BuildMemories(storyContext);
+            if (!string.IsNullOrWhiteSpace(memories))
+            {
+                sb.AppendLine(memories);
+            }
+
             // Character constraints
             sb.AppendLine("Character Guidelines:");
             sb.AppendLine("  * Write only what the player can observe or hear from you.");
@@ -173,6 +192,22 @@ namespace VoidAI.GenAI.Story
             return sb.ToString();
         }
 
+        static string BuildMemories(StoryContext storyContext)
+        {
+            if (storyContext.CurrentFrame.Memories.Count == 0)
+                return null;
+
+            var sb = new System.Text.StringBuilder();
+            // Memories
+            sb.AppendLine("Relevant Memories:");
+            foreach (var memory in storyContext.CurrentFrame.Memories)
+            {
+                sb.AppendLine($"  - {memory.Full}");
+            }
+            sb.AppendLine();
+            return sb.ToString();
+        }
+
         static string BuildPrompt_Narration(string input, StoryContext storyContext)
         {
             var player = storyContext.CurrentFrame.PlayerData.dataName;
@@ -186,9 +221,28 @@ namespace VoidAI.GenAI.Story
             sb.AppendLine("Never refer to yourself or your role as an assistant or AI.");
             sb.AppendLine();
 
+            sb.AppendLine($"The player is {player}.");
+            sb.AppendLine($"    - Age: {storyContext.PlayerData.dataName}.");
+            sb.AppendLine($"    - Gender: {storyContext.PlayerData.playerGender}.");
+            sb.AppendLine($"    - Height: {storyContext.PlayerData.playerHeight}.");
+            sb.AppendLine($"    - Appearance: {storyContext.PlayerData.playerAppearance}.");
+            sb.AppendLine();
+
             // Scene state
             sb.AppendLine($"The {player} is currently in: {location}");
             sb.AppendLine();
+
+            // Scenario information
+            sb.AppendLine("Scenario Information:");
+            sb.AppendLine($"    {storyContext.Scenario}");
+            sb.AppendLine();
+
+            // Memories
+            string memories = BuildMemories(storyContext);
+            if (!string.IsNullOrWhiteSpace(memories))
+            {
+                sb.AppendLine(memories);
+            }
 
             // Characters (verbatim, so the model knows exactly who to output)
             sb.AppendLine("Characters Present (output one <CHARACTER> block for each, in this order):");

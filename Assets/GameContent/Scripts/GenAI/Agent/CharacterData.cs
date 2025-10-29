@@ -4,7 +4,6 @@ using System.Collections.Generic;
 namespace VoidAI.GenAI.Agent
 {
 
-    [Serializable]
     public class CharacterData : AgentData
     {
         public string characterAge = "25";
@@ -19,6 +18,26 @@ namespace VoidAI.GenAI.Agent
         public string characterDislikes = "Loud noises and crowds";
         public string characterSpecialTraits = "Highly empathetic and a quick learner";
         public string characterGoals = "To help others and continuously improve herself";
+
+        public override BaseData Clone()
+        {
+            return new CharacterData
+            {
+                dataId = this.dataId,
+                dataName = this.dataName,
+                agentRole = this.agentRole,
+                characterAge = this.characterAge,
+                characterGender = this.characterGender,
+                characterHeight = this.characterHeight,
+                characterAppearance = this.characterAppearance,
+                characterRelationship = this.characterRelationship,
+                characterPersonality = this.characterPersonality,
+                characterLikes = this.characterLikes,
+                characterDislikes = this.characterDislikes,
+                characterSpecialTraits = this.characterSpecialTraits,
+                characterGoals = this.characterGoals
+            };
+        }
 
         public override void LoadFromResourcePath(List<string[]> parsedData, string userName)
         {
