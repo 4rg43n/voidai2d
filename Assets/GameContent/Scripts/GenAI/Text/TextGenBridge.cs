@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Windows;
 
 namespace VoidAI.GenAI.Text
 {
@@ -77,13 +78,7 @@ namespace VoidAI.GenAI.Text
                         }
                     }
 
-                    MessageLLM msg = new MessageLLM(reply)
-                    {
-                        speakerName = speakerName,
-                        modelName = modelName,
-                        prompt = prompt,
-                        playerInput=input,
-                    };
+                    MessageLLM msg = CreateMessageLLM(reply, speakerName, modelName, prompt, input);
 
                     callback(msg);
                 }
@@ -94,6 +89,19 @@ namespace VoidAI.GenAI.Text
                     callback(new MessageLLM("..."));
                 }
             }
+        }
+
+        public static MessageLLM CreateMessageLLM(string reply, string speakerName, string modelName, string prompt, string input)
+        {
+            MessageLLM msg = new MessageLLM(reply)
+            {
+                speakerName = speakerName,
+                modelName = modelName,
+                prompt = prompt,
+                playerInput = input,
+            };
+
+            return msg;
         }
 
         [System.Serializable]

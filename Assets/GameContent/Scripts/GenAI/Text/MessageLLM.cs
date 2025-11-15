@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace VoidAI.GenAI.Text
 {
-
+    [System.Serializable]
     public class MessageLLM
     {
         public string speakerName;
@@ -100,6 +100,7 @@ namespace VoidAI.GenAI.Text
         }
     }
 
+    [System.Serializable]
     public class MessageLLMTag
     {
         public string tag;

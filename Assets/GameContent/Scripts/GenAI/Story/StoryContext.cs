@@ -5,11 +5,11 @@ using VoidAI.GenAI.Agent;
 
 namespace VoidAI.GenAI.Story
 {
+    [System.Serializable]
     public class StoryContext
     {
         public string Title = "The Great Adventure";
         public string Tone = "modern";
-
 
         // global story information
         public string Introduction = "This is a story about a brave adventurer.";                 // displayed in user list
@@ -105,8 +105,16 @@ namespace VoidAI.GenAI.Story
 
         public void AddNewFrame()
         {
-            storyFrames.Add(new StoryFrame());
-            CurrentFrame.Init(this);
+            if (storyFrames.Count == 0)
+            {
+                StoryFrame initialFrame = StoryFrame.CreateInitialFrame(this);
+                storyFrames.Add(initialFrame);
+            }
+            else
+            {
+                StoryFrame newFrame = StoryFrame.DuplicateFrame(CurrentFrame);
+                storyFrames.Add(newFrame);
+            }
         }
     }
 }

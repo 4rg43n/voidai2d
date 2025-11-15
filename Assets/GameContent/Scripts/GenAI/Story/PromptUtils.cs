@@ -32,7 +32,7 @@ namespace VoidAI.GenAI.Story
         static string BuildPrompt_Character(string input, StoryContext storyContext)
         {
             var player = storyContext.CurrentFrame.PlayerData.dataName;
-            var character = storyContext.CurrentFrame.CharacterData;
+            var character = storyContext.CurrentFrame.CharacterData[0];
             var location = storyContext.CurrentFrame.LocationData.locationDescription;
 
             var sb = new System.Text.StringBuilder();
@@ -135,11 +135,13 @@ namespace VoidAI.GenAI.Story
 
         static string BuildCharacterNameList(StoryContext storyContext)
         {
+            var character = storyContext.CurrentFrame.CharacterData[0];
+
             var sb = new System.Text.StringBuilder();
 
             CharacterData[] characters = new CharacterData[]
             {
-                storyContext.CurrentFrame.CharacterData
+                character
             };
 
             for (int i = 0; i < characters.Length; i++)
@@ -156,11 +158,13 @@ namespace VoidAI.GenAI.Story
 
         static string BuildCharacterDescriptionList(StoryContext storyContext)
         {
+            var character = storyContext.CurrentFrame.CharacterData[0];
+
             var sb = new System.Text.StringBuilder();
 
             CharacterData[] characters = new CharacterData[]
             {
-                storyContext.CurrentFrame.CharacterData
+                character
             };
 
             foreach (var c in characters)

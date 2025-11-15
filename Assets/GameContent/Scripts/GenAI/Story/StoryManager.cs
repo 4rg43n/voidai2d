@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using VoidAI.GenAI.Agent;
 using VoidAI.GenAI.Text;
@@ -6,6 +7,8 @@ namespace VoidAI.GenAI.Story
 {
     public class StoryManager : MonoBehaviour
     {
+        public bool overrideLoad = false;
+
         public StoryContext storyContext;
         public string testScenarioName = "Test/rins_confession";
         public string locationPathName = "Test/location_white_void";
@@ -22,24 +25,43 @@ namespace VoidAI.GenAI.Story
 
         private void Start()
         {
-            //storyContext = LoadStoryFromResources(new string[] { locationPathName, characterPathName });
-            storyContext = DataUtils.LoadStoryFromResources(testScenarioName, testPlayerName);
-            Debug.Log($"Loaded test story title={storyContext.Title}");
             ChatPanelUI.Singleton.OnSubmit += (input) => { HandleInput(input); };
-
-            ChatPanelUI.Singleton.AddCharacterMessage(storyContext.FirstMessage);
-
-            //TagOutputSanitizer.TestSanitizer();
+            LoadStoryContext();
         }
 
-        //private void Update()
-        //{
-        //    if (Input.GetKeyDown(KeyCode.T))
-        //    {
-        //        Debug.Log("Starting LLM cal==========>");
-        //        HandleInput();
-        //    }
-        //}
+        void LoadStoryContext()
+        {
+            storyContext = DataUtils.LoadStoryFromResources(testScenarioName, testPlayerName);
+            Debug.Log($"Loaded test story title={storyContext.Title}");
+
+            StoryContext loadedStory = overrideLoad ? null : LoadSaveStoryUtils.LoadStory(storyContext);
+            if (loadedStory == null)
+            {
+                // display the first message
+                MessageLLM firstMessageLLM = TextGenBridge.CreateMessageLLM(
+                    storyContext.FirstMessage,
+                    storyContext.narrator.dataName,
+                    "",
+                    "",
+                    "");
+                HandleLLMOutput(firstMessageLLM);
+
+                Debug.Log("Loaded new story. Displaying first message.");
+            }
+            else
+            {
+                // restore the loaded story
+                storyContext = loadedStory;
+                foreach (var frame in storyContext.storyFrames)
+                {
+                    if (!string.IsNullOrEmpty(frame.StoryResponse.messageData.playerInput))
+                        ChatPanelUI.Singleton.AddPlayerMessage(frame.StoryResponse.messageData.playerInput);
+                    AddCharacterMessage(frame.StoryResponse.formattedResponse, false);
+                }
+
+                Debug.Log("Loaded story from disk and restored messages.");
+            }
+        }
 
         public void HandleInput(string input)
         {
@@ -62,6 +84,8 @@ namespace VoidAI.GenAI.Story
 
         void HandleLLMOutput(MessageLLM messageLLM)
         {
+            bool isSpecialOutput = string.IsNullOrEmpty(messageLLM.prompt);
+
             // fill out the message data
             messageLLM.speakerName = storyContext.narrator.dataName;
             StoryMessageLLM storyMessageLLM = new StoryMessageLLM()
@@ -74,36 +98,37 @@ namespace VoidAI.GenAI.Story
             Debug.Log($"LLM: {messageLLM.response}");
 
             // process memories and facts
-            storyContext.AddNewFrame();
+
+            if (!isSpecialOutput)
+                storyContext.AddNewFrame();
             // TODO: process memories and facts here
             storyContext.CurrentFrame.StoryResponse = storyMessageLLM;
 
             // format for printing
-            storyContext.CurrentFrame.StoryResponse.ParseResponse();
-            storyContext.CurrentFrame.StoryResponse.CreateFormattedResponse();
+            if (!isSpecialOutput)
+            {
+                storyContext.CurrentFrame.StoryResponse.ParseResponse();
+                storyContext.CurrentFrame.StoryResponse.CreateFormattedResponse();
+            }
+            else
+                storyContext.CurrentFrame.StoryResponse.formattedResponse = messageLLM.response;
 
-            ChatPanelUI.Singleton.AddCharacterMessage(storyMessageLLM.formattedResponse);
+            AddCharacterMessage(storyContext.CurrentFrame.StoryResponse.formattedResponse, true);
 
             storyContext.CurrentFrame.StoryResponse.LogDetails();
         }
 
-        StoryContext LoadStoryFromResources(string[] resourcePathNames)
+        public void AddCharacterMessage(string msg, bool save)
         {
-            StoryContext newStoryContext = new StoryContext();
-
-            newStoryContext.CurrentFrame.PlayerData = new PlayerData();
-            newStoryContext.CurrentFrame.PlayerData.dataName = testPlayerName;
-
-            newStoryContext.CurrentFrame.LocationData = DataUtils.LoadDataFromResources<LocationData>(resourcePathNames[0], newStoryContext.CurrentFrame.PlayerData.dataName);
-            newStoryContext.CurrentFrame.CharacterData = DataUtils.LoadDataFromResources<CharacterData>(resourcePathNames[1], newStoryContext.CurrentFrame.PlayerData.dataName);
-
-
-            newStoryContext.narrator = new NarratorData() { agentRole = "narrator", dataName = "Narrator" };
-
-            return newStoryContext;
+            ChatPanelUI.Singleton.AddCharacterMessage(msg);
+            if (save)
+            {
+                Debug.Log($"Story saved to {LoadSaveStoryUtils.SaveStory(storyContext)}");
+            }
         }
     }
 
+    [System.Serializable]
     public class StoryMessageLLM
     {
         public MessageLLM messageData;
