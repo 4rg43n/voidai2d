@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
 using VoidAI.GenAI.Agent;
 
 namespace VoidAI.GenAI.Story
@@ -27,7 +25,8 @@ namespace VoidAI.GenAI.Story
         public string DialogueStyle = "";                                                       // rules for how the LLM returns dialogue
 
         public PlayerData PlayerData;
-        public NarratorData narrator;
+        public NarratorData NarratorData;
+
         public List<StoryFrame> storyFrames = new();
 
         public StoryFrame CurrentFrame { get { return storyFrames[storyFrames.Count - 1]; } }
@@ -97,7 +96,7 @@ namespace VoidAI.GenAI.Story
             }
 
             PlayerData = new PlayerData() { dataName = userName };
-            narrator = new NarratorData() { agentRole = "narrator", dataName = "Narrator" };
+            NarratorData = new NarratorData() { agentRole = "narrator", dataName = "Narrator" };
 
             storyFrames.Clear();
             AddNewFrame();
