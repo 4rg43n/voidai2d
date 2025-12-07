@@ -6,6 +6,8 @@ namespace VoidAI.GenAI.Story
 {
     public class StoryManager : MonoBehaviour
     {
+        public static StoryManager Singleton { get; private set; }
+
         public bool overrideLoad = false;
 
         public StoryContext storyContext;
@@ -22,9 +24,13 @@ namespace VoidAI.GenAI.Story
         public Color actionTagColor = Color.blue;
         public Color dialogueTagColor = Color.green;
 
+        private void Awake()
+        {
+            Singleton = this;
+        }
+
         private void Start()
         {
-            ChatPanelUI.Singleton.OnSubmit += (input) => { HandleInput(input); };
             LoadStoryContext();
         }
 
@@ -54,12 +60,34 @@ namespace VoidAI.GenAI.Story
                 foreach (var frame in storyContext.storyFrames)
                 {
                     if (!string.IsNullOrEmpty(frame.StoryResponse.messageData.playerInput))
-                        ChatPanelUI.Singleton.AddPlayerMessage(frame.StoryResponse.messageData.playerInput);
-                    AddCharacterMessage(frame.StoryResponse.formattedResponse, false);
+                        AddCharacterMessage(frame.StoryResponse.messageData.playerInput, frame.Id, true, false);
+                    AddCharacterMessage(frame.StoryResponse.formattedResponse, frame.Id, false, false);
                 }
 
                 Debug.Log("Loaded story from disk and restored messages.");
             }
+        }
+
+        public void RerollResponse()
+        {
+            string playerInput = storyContext.CurrentFrame.StoryResponse.messageData.playerInput;
+            HandleInput(playerInput);
+
+            DeleteFrame(storyContext.CurrentFrame.Id);
+            SubmitPlayerInput(playerInput);
+        }
+
+        public void DeleteFrame(string frameId)
+        {
+            storyContext.DeleteFrameById(frameId);
+            ChatPanelUI.Singleton.UpdateView();
+            SaveStory();
+        }
+
+        public void SubmitPlayerInput(string input)
+        {
+            AddCharacterMessage(input, storyContext.CurrentFrame.Id, true, false);
+            HandleInput(input);
         }
 
         public void HandleInput(string input)
@@ -112,18 +140,31 @@ namespace VoidAI.GenAI.Story
             else
                 storyContext.CurrentFrame.StoryResponse.formattedResponse = messageLLM.response;
 
-            AddCharacterMessage(storyContext.CurrentFrame.StoryResponse.formattedResponse, true);
+            AddCharacterMessage(
+                storyContext.CurrentFrame.StoryResponse.formattedResponse,
+                storyContext.CurrentFrame.Id,
+                false,
+                true);
 
             storyContext.CurrentFrame.StoryResponse.LogDetails();
         }
 
-        public void AddCharacterMessage(string msg, bool save)
+        public void AddCharacterMessage(string msg, string frameId, bool isPlayer, bool save)
         {
-            ChatPanelUI.Singleton.AddCharacterMessage(msg);
+            if (isPlayer)
+                ChatPanelUI.Singleton.AddPlayerMessage(frameId + ":" + msg, frameId);
+            else
+                ChatPanelUI.Singleton.AddCharacterMessage(frameId + ":" + msg, frameId);
+
             if (save)
             {
-                Debug.Log($"Story saved to {LoadSaveStoryUtils.SaveStory(storyContext)}");
+                SaveStory();
             }
+        }
+
+        void SaveStory()
+        {
+            Debug.Log($"Story saved to {LoadSaveStoryUtils.SaveStory(storyContext)}");
         }
     }
 

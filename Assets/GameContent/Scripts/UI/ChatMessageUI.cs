@@ -1,15 +1,16 @@
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEngine.Rendering.DebugUI;
+using VoidAI.GenAI.Story;
 
 public class ChatMessageUI : MonoBehaviour, IContextMenuProvider
 {
     public TextMeshProUGUI text;
     public Image image;
     public bool isPlayer = false;
+
+    public string frameSrcId = string.Empty;
 
     public void BuildMenuItems(GameObject clicked, List<ContextMenuManager.MenuItem> items)
     {
@@ -22,14 +23,16 @@ public class ChatMessageUI : MonoBehaviour, IContextMenuProvider
             Action = () => { Debug.Log($"Copy {clicked.name}"); GenGameUtils.CopyToClipboard(text.text); }
         });
 
-        if (chatPanel.IsInLastFrame(this))
+        bool isInLastFrame = StoryManager.Singleton.storyContext.IsInLastFrame(frameSrcId);
+
+        if (isInLastFrame)
         {
             if (isPlayer)
             {
                 items.Add(new ContextMenuManager.MenuItem
                 {
                     Label = "Delete",
-                    Action = () => { Debug.Log($"Delete {clicked.name}"); /*CharacterGameManager.Singleton.DeleteFrame();*/ }
+                    Action = () => { Debug.Log($"Delete {clicked.name}"); StoryManager.Singleton.DeleteFrame(frameSrcId); /*CharacterGameManager.Singleton.DeleteFrame();*/ }
                 });
             }
             else
@@ -37,7 +40,7 @@ public class ChatMessageUI : MonoBehaviour, IContextMenuProvider
                 items.Add(new ContextMenuManager.MenuItem
                 {
                     Label = "Reroll",
-                    Action = () => { Debug.Log($"Reroll {clicked.name}"); /*CharacterGameManager.Singleton.RerollFrame();*/ }
+                    Action = () => { Debug.Log($"Reroll {clicked.name}"); StoryManager.Singleton.RerollResponse(); /*CharacterGameManager.Singleton.RerollFrame();*/ }
                 });
             }
         }
@@ -50,21 +53,21 @@ public class ChatMessageUI : MonoBehaviour, IContextMenuProvider
         //});
     }
 
-    public void SetColor(Color col)
-    {
-        image.color = col;
-    }
+    //public void SetColor(Color col)
+    //{
+    //    image.color = col;
+    //}
 
-    public void SetText(string msg)
-    {
-        text.text = msg;
-        ScrollToBottom();
-    }
+    //public void SetText(string msg)
+    //{
+    //    text.text = msg;
+    //    ScrollToBottom();
+    //}
 
-    void ScrollToBottom()
-    {
-        Canvas.ForceUpdateCanvases();
-    }
+    //void ScrollToBottom()
+    //{
+    //    Canvas.ForceUpdateCanvases();
+    //}
 }
 
 

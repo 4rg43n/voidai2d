@@ -33,7 +33,18 @@ namespace VoidAI.GenAI.Story
 
         public StoryContext()
         {
-            storyFrames.Add(new StoryFrame());
+            storyFrames.Add(StoryFrame.CreateEmptyFrame(true));
+        }
+
+        public bool IsInLastFrame(string frameId)
+        {
+            return CurrentFrame.Id == frameId;
+        }
+
+        public void DeleteFrameById(string frameId)
+        {
+            ChatPanelUI.Singleton.RemoveChatEntriesById(frameId);
+            storyFrames.RemoveAll(f => f.Id == frameId);
         }
 
         public void LoadFromResourcePath(List<string[]> parsedData, string userName)

@@ -1,8 +1,6 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using VoidAI.GenAI.Text;
@@ -24,8 +22,6 @@ public class ChatPanelUI : MonoBehaviour
     bool isVis = true;
 
     public string lastInput = "";
-
-    public Action<string> OnSubmit;
 
     private void Awake()
     {
@@ -55,6 +51,20 @@ public class ChatPanelUI : MonoBehaviour
         root.gameObject.SetActive(isVis);
     }
 
+    public void RemoveChatEntriesById(string frameId)
+    {
+        ChatMessageUI[] chats = content.GetComponentsInChildren<ChatMessageUI>();
+        foreach (ChatMessageUI ch in chats)
+        {
+            if (ch.frameSrcId == frameId)
+            {
+                Destroy(ch.gameObject);
+            }
+        }
+
+        ScrollToBottom();
+    }
+
     public void Clear()
     {
         ChatMessageUI[] chats = content.GetComponentsInChildren<ChatMessageUI>();
@@ -64,30 +74,17 @@ public class ChatPanelUI : MonoBehaviour
         }
     }
 
-    public void SubmitInput()
+    public void AddCharacterMessage(string msg, string frameSrcId)
     {
-        string msg = inputField.text;
-        inputField.text = "";
-
-        msg = msg.Trim();
-        if (msg.Length == 0)
-            return;
-
-        AddPlayerMessage(msg);
-        OnSubmit?.Invoke(msg);
+        AddMessage($"{msg}", frameSrcId, false);
     }
 
-    public void AddCharacterMessage(string msg)
+    public void AddPlayerMessage(string input, string frameSrcId)
     {
-        AddMessage($"{msg}", false);
+        AddMessage(input, frameSrcId, true);
     }
 
-    public void AddPlayerMessage(string input)
-    {
-        AddMessage(input, true);
-    }
-
-    public void AddMessage(string message, bool isPlayer)
+    void AddMessage(string message, string frameSrcId, bool isPlayer)
     {
         ChatMessageUI msgUI = isPlayer ? playerMsgPrefab : speakerMsgPrefab;
         msgUI.isPlayer = isPlayer;
@@ -96,6 +93,7 @@ public class ChatPanelUI : MonoBehaviour
         msgUI.text.text = message;
         msgUI.transform.parent = content;
         msgUI.transform.localScale = Vector3.one;
+        msgUI.frameSrcId = frameSrcId;
 
         ScrollToBottom();
     }
@@ -104,7 +102,7 @@ public class ChatPanelUI : MonoBehaviour
     {
         List<ChatMessageUI> chats = new List<ChatMessageUI>(content.GetComponentsInChildren<ChatMessageUI>());
 
-        for (int i=0;i<num;i++)
+        for (int i = 0; i < num; i++)
         {
             Destroy(chats[chats.Count - 1].gameObject);
             chats.RemoveAt(chats.Count - 1);
@@ -113,38 +111,43 @@ public class ChatPanelUI : MonoBehaviour
         ScrollToBottom();
     }
 
-    public bool IsInLastFrame(ChatMessageUI chatMsg)
-    {
-        List<ChatMessageUI> chats = new List<ChatMessageUI>(content.GetComponentsInChildren<ChatMessageUI>());
+    //public bool IsInLastFrame(ChatMessageUI chatMsg)
+    //{
+    //    List<ChatMessageUI> chats = new List<ChatMessageUI>(content.GetComponentsInChildren<ChatMessageUI>());
 
-        int lastInputIndex = -1;
-        for (int i = chats.Count-1; i >=0; i--)
-        {
-            ChatMessageUI msgToCheck = chats[i];
-            if (msgToCheck.isPlayer)
-            {
-                lastInputIndex = i;
-                break;
-            }
-        }
+    //    int lastInputIndex = -1;
+    //    for (int i = chats.Count - 1; i >= 0; i--)
+    //    {
+    //        ChatMessageUI msgToCheck = chats[i];
+    //        if (msgToCheck.isPlayer)
+    //        {
+    //            lastInputIndex = i;
+    //            break;
+    //        }
+    //    }
 
-        if (lastInputIndex == -1)
-            return false;
+    //    if (lastInputIndex == -1)
+    //        return false;
 
-        for (int i = chats.Count - 1; i >= 0; i--)
-        {
-            ChatMessageUI msgToCheck = chats[i];
-            if (msgToCheck == chatMsg && i >= lastInputIndex)
-                return true;
-        }
+    //    for (int i = chats.Count - 1; i >= 0; i--)
+    //    {
+    //        ChatMessageUI msgToCheck = chats[i];
+    //        if (msgToCheck == chatMsg && i >= lastInputIndex)
+    //            return true;
+    //    }
 
-        return false;
-    }
+    //    return false;
+    //}
 
     void SetInputFocus()
     {
         inputField.ActivateInputField();
         inputField.Select();
+    }
+
+    public void UpdateView()
+    {
+        ScrollToBottom();
     }
 
     void ScrollToBottom()

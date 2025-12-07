@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using VoidAI.GenAI.Agent;
 
 namespace VoidAI.GenAI.Story
@@ -8,6 +7,8 @@ namespace VoidAI.GenAI.Story
     [System.Serializable]
     public class StoryFrame
     {
+        public string Id;
+
         public PlayerData PlayerData;
         public LocationData LocationData;
         public List<CharacterData> CharacterData = new();
@@ -15,9 +16,25 @@ namespace VoidAI.GenAI.Story
 
         public StoryMessageLLM StoryResponse;
 
+        public StoryFrame()
+        {
+            Id = Guid.NewGuid().ToString();
+        }
+
+        public static StoryFrame CreateEmptyFrame(bool createId)
+        {
+            StoryFrame newStoryFrame = new StoryFrame();
+            if (createId)
+                newStoryFrame.Id = Guid.NewGuid().ToString();
+            else
+                newStoryFrame.Id = string.Empty;
+
+            return newStoryFrame;
+        }
+
         public void AddMemory(string input)
         {
-            Memories.Add(new MemoryEntry() { Full=input, Summary=input, });
+            Memories.Add(new MemoryEntry() { Full = input, Summary = input, });
         }
 
         public static StoryFrame CreateInitialFrame(StoryContext storyContext)
@@ -59,7 +76,7 @@ namespace VoidAI.GenAI.Story
                 LocationData = LocationData != null ? (LocationData)LocationData.Clone() : null,
                 CharacterData = CharacterData != null ? clonedCharacterData : null,
                 Memories = clonedMemories,
-                StoryResponse=StoryResponse.Clone(),
+                StoryResponse = StoryResponse.Clone(),
             };
 
             return newStoryFrame;
