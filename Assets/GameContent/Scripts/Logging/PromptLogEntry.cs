@@ -5,16 +5,18 @@ public class PromptLogEntry
 {
     public string AgentName;
     public string AgentType;
+    public string PromptType;
     public string ModelName;
     public string Prompt;
     public string OriginalResponse;
     public string Response;
     public DateTime Timestamp;
 
-    public PromptLogEntry(string agentName, string agentType, string modelName, string prompt, string originalRespone, string response)
+    public PromptLogEntry(string agentName, string agentType, string promptType, string modelName, string prompt, string originalRespone, string response)
     {
         AgentName = agentName;
         AgentType = agentType;
+        PromptType = promptType;
         ModelName = modelName;
         Prompt = prompt;
         OriginalResponse = originalRespone;

@@ -152,9 +152,9 @@ namespace VoidAI.GenAI.Story
         public void AddCharacterMessage(string msg, string frameId, bool isPlayer, bool save)
         {
             if (isPlayer)
-                ChatPanelUI.Singleton.AddPlayerMessage(frameId + ":" + msg, frameId);
+                ChatPanelUI.Singleton.AddPlayerMessage(/*frameId + ":" + */msg, frameId);
             else
-                ChatPanelUI.Singleton.AddCharacterMessage(frameId + ":" + msg, frameId);
+                ChatPanelUI.Singleton.AddCharacterMessage(/*frameId + ":" + */msg, frameId);
 
             if (save)
             {
