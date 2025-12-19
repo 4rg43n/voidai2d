@@ -10,9 +10,12 @@ namespace VoidAI.GenAI.Agent
         public string Full;
         public string Summary;
 
-        public MemoryEntry()
+        public MemoryEntry() { }
+        public MemoryEntry(string full, string summary)
         {
             Id = Guid.NewGuid().ToString();
+            Full = full;
+            Summary = summary;
         }
 
         public override string ToString()

@@ -49,6 +49,7 @@ namespace VoidAI.GenAI.Story
                     "",
                     "",
                     "");
+                storyContext.CurrentFrame.AddMemory(storyContext.FirstMessage);
                 HandleLLMOutput(firstMessageLLM);
 
                 Debug.Log("Loaded new story. Displaying first message.");
@@ -124,12 +125,14 @@ namespace VoidAI.GenAI.Story
 
             Debug.Log($"LLM: {messageLLM.response}");
 
-            // process memories and facts
-
+            // the very first frame comes from the initial story context
             if (!isSpecialOutput)
                 storyContext.AddNewFrame();
+
             // TODO: process memories and facts here
             storyContext.CurrentFrame.StoryResponse = storyMessageLLM;
+            storyContext.CurrentFrame.AddMemory(storyContext.CurrentFrame.StoryResponse.messageData.playerInput);
+
 
             // format for printing
             if (!isSpecialOutput)

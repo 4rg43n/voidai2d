@@ -32,9 +32,11 @@ namespace VoidAI.GenAI.Story
             return newStoryFrame;
         }
 
-        public void AddMemory(string input)
+        public void AddMemory(string memory)
         {
-            Memories.Add(new MemoryEntry() { Full = input, Summary = input, });
+            if (string.IsNullOrEmpty(memory))
+                return;
+            Memories.Add(new MemoryEntry(memory, memory));
         }
 
         public static StoryFrame CreateInitialFrame(StoryContext storyContext)
